@@ -1,5 +1,5 @@
-from turtle import color
 import matplotlib.pyplot as plt
+import math
 
 point_distance = 0.1
 
@@ -19,8 +19,38 @@ def draw_square_lattice(n=1):
     index = 0
     for j in range(n):
         for i in range(n):
-            draw_point(i * point_distance, -1 * j * point_distance, index, n)
+            draw_point(
+                i * point_distance,
+                -1 * j * point_distance,
+                index,
+                most_point_distances=n,
+            )
             index += 1
+
+    show()
+
+
+def draw_triangular_lattice(n=1):
+    init()
+
+    y_step = math.sin(60 / 180 * math.pi) * point_distance
+
+    y_value = 0
+
+    index = 0
+    for i in range(n):  # row
+        if i % 2 == 0:
+            # odd row
+            offsets = list(range(-(i // 2), (i // 2) + 1))
+        else:
+            # even row
+            offsets = [i + 0.5 for i in range(-((i + 1) // 2), (i + 1) // 2)]
+
+        for j in offsets:
+            draw_point(j * point_distance, y_value, index, most_point_distances=n)
+            index += 1
+
+        y_value -= y_step
 
     show()
 
@@ -35,4 +65,6 @@ def init():
 
 
 if __name__ == "__main__":
-    draw_square_lattice(8)
+    # draw_square_lattice(8)
+    # draw_triangular_lattice(5)
+    draw_hexagonal_lattice(5)
