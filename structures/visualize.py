@@ -1,7 +1,12 @@
 import matplotlib.pyplot as plt
 import math
 
-from neighbors import square_lattice_get_nn_indices, square_lattice_get_nnn_indices
+from neighbors import (
+    square_lattice_get_nn_indices,
+    square_lattice_get_nnn_indices,
+    triangular_square_lattice_get_nn_indices,
+    triangular_square_lattice_get_nnn_indices,
+)
 
 point_distance = 0.1
 highlight_index = -1
@@ -118,38 +123,46 @@ def draw_square_lattice(n=1, periodic_bounds=False):
     )
 
 
-def coords_triangular_lattice(n=1):
+def coords_triangular_square_lattice(n=1):
     assert n > 0
     coords = []
 
     y_step = math.sin(60 / 180 * math.pi) * point_distance
+    x_offset = point_distance / 2.0
 
     y_value = 0
 
+    size = 2 * n
+
     index = 0
-    for i in range(n):  # row
-        if i % 2 == 0:
-            # odd row
-            offsets = list(range(-(i // 2), (i // 2) + 1))
-        else:
-            # even row
-            offsets = [i + 0.5 for i in range(-((i + 1) // 2), (i + 1) // 2)]
+    for i in range(size):  # row
+        for j in range(size):  # "col"
 
-        for j in offsets:
-            coords.append((index, j * point_distance, y_value))
+            if i % 2 == 0:
+                # "right" row
+                coords.append((index, j * point_distance, y_value))
+            else:
+                # "left" row
+                coords.append((index, j * point_distance - x_offset, y_value))
+
             index += 1
-
         y_value -= y_step
 
     return coords
 
 
-def draw_triangular_lattice(n=1):
-    coords = coords_triangular_lattice(n=n)
+def draw_triangular_square_lattice(n=1, periodic_bounds=False):
+    coords = coords_triangular_square_lattice(n=n)
 
-    draw_lattice(coords, n)
+    draw_lattice(
+        coords,
+        2 * n,
+        nn_function=triangular_square_lattice_get_nn_indices,
+        nnn_function=triangular_square_lattice_get_nnn_indices,
+        periodic_bounds=periodic_bounds,
+    )
 
 
 if __name__ == "__main__":
-    draw_square_lattice(6, True)
-    # draw_triangular_lattice(5)
+    # draw_square_lattice(6, True)
+    draw_triangular_square_lattice(3, True)
