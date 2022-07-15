@@ -6,6 +6,8 @@ from neighbors import (
     square_lattice_get_nnn_indices,
     triangular_square_lattice_get_nn_indices,
     triangular_square_lattice_get_nnn_indices,
+    triangular_hexagonal_lattice_get_nn_indices,
+    triangular_hexagonal_lattice_get_nnn_indices,
 )
 
 point_distance = 0.1
@@ -163,6 +165,40 @@ def draw_triangular_square_lattice(n=1, periodic_bounds=False):
     )
 
 
+def coords_triangular_hexagonal_lattice(n=1):
+    assert n > 0
+    coords = []
+
+    y_step = math.sin(60 / 180 * math.pi) * point_distance
+
+    y_value = -n * y_step
+    x_offset = point_distance / 2.0
+
+    index = 0
+    for i in range(-n, n + 1):  # row
+        for j in range(n - abs(i) + 1):
+            coords.append((index, abs(i) * x_offset + j * point_distance, y_value))
+            index += 1
+
+        y_value -= y_step
+
+    return coords
+
+
+def draw_triangular_hexagonal_lattice(n=1, periodic_bounds=False):
+    coords = coords_triangular_hexagonal_lattice(n=n)
+
+    draw_lattice(
+        coords,
+        2 * n,
+        nn_function=triangular_hexagonal_lattice_get_nn_indices,
+        nnn_function=triangular_hexagonal_lattice_get_nnn_indices,
+        periodic_bounds=periodic_bounds,
+    )
+
+
 if __name__ == "__main__":
     # draw_square_lattice(6, True)
-    draw_triangular_square_lattice(3, True)
+    # draw_triangular_square_lattice(3, True)
+
+    draw_triangular_hexagonal_lattice(4, False)
