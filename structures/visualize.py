@@ -1,12 +1,14 @@
 import matplotlib.pyplot as plt
 import math
 
+from neighbors import square_lattice_get_nn_indices, square_lattice_get_nnn_indices
+
 point_distance = 0.1
 highlight_index = -1
 
 # Draw a point based on the x, y axis value.
-def draw_point(x, y, label="", most_point_distances=1, highlight=False):
-    plt.scatter(x, y, s=30, c=("#0000aa" if not highlight else "#00aa00"))
+def draw_point(x, y, label="", most_point_distances=1, c="#0000aa"):
+    plt.scatter(x, y, s=30, c=c)
     plt.text(
         x - 0.01 * point_distance * most_point_distances,
         y - 0.03 * point_distance * most_point_distances,
@@ -15,19 +17,35 @@ def draw_point(x, y, label="", most_point_distances=1, highlight=False):
 
 
 # iterate over list of points to draw lattice
-def draw_lattice(coords, most_point_distances):
+def draw_lattice(coords, n, nn_function=None, nnn_function=None, periodic_bounds=False):
     global highlight_index
 
     while True:
         init(coords)
+
+        if nn_function is None:
+            nn_indices = []
+        else:
+            nn_indices = nn_function(highlight_index, n, periodic_bounds)
+
+        if nnn_function is None:
+            nnn_indices = []
+        else:
+            nnn_indices = nnn_function(highlight_index, n, periodic_bounds)
 
         for index, x, y in coords:
             draw_point(
                 x,
                 y,
                 index,
-                most_point_distances=most_point_distances,
-                highlight=index == highlight_index,
+                most_point_distances=n,
+                c="#aa0000"
+                if index == highlight_index
+                else (
+                    "#00aa00"
+                    if index in nn_indices
+                    else ("#aaaa00" if index in nnn_indices else "#0000aa")
+                ),
             )
 
         show()
@@ -88,10 +106,16 @@ def coords_square_lattice(n=1):
     return coords
 
 
-def draw_square_lattice(n=1):
+def draw_square_lattice(n=1, periodic_bounds=False):
     coords = coords_square_lattice(n=n)
 
-    draw_lattice(coords, n)
+    draw_lattice(
+        coords,
+        n,
+        nn_function=square_lattice_get_nn_indices,
+        nnn_function=square_lattice_get_nnn_indices,
+        periodic_bounds=periodic_bounds,
+    )
 
 
 def coords_triangular_lattice(n=1):
@@ -127,5 +151,5 @@ def draw_triangular_lattice(n=1):
 
 
 if __name__ == "__main__":
-    # draw_square_lattice(3)
-    draw_triangular_lattice(5)
+    draw_square_lattice(6, True)
+    # draw_triangular_lattice(5)
