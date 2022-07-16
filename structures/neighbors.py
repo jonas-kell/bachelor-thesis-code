@@ -140,8 +140,6 @@ def triag_hex_index_to_row_col(index, n):
 
 
 def triag_hex_row_col_to_index(row, col, n, periodic_bounds=True):
-    index = 0
-
     if (
         row < 0
         or row > 2 * n
@@ -150,11 +148,24 @@ def triag_hex_row_col_to_index(row, col, n, periodic_bounds=True):
     ):
         if periodic_bounds:
             # transform row/col into valid space
-            pass
+            print(row, col)
+            row = row % (2 * n)
+            elems_in_row = (row + 1) if row <= n else 2 * n - row + 1
+            col = col % (n + 1)
+
+            if col >= elems_in_row:
+                col = col - elems_in_row
+
+                if row < n:
+                    row = row + n + 1
+                elif row > n:
+                    row = row - n - 1
+            print("after", row, col)
         else:
             # return invalid
             return -1
 
+    index = 0
     for i in [n - abs(j) + 1 for j in range(-n, row - n)]:
         index += i
 
