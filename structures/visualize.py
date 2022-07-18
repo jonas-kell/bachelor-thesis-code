@@ -201,4 +201,4 @@ if __name__ == "__main__":
     # draw_square_lattice(6, True)
     # draw_triangular_square_lattice(3, True)
 
-    draw_triangular_diamond_lattice(4, True)
+    draw_triangular_diamond_lattice(6, True)
