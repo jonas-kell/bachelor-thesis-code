@@ -6,8 +6,8 @@ from neighbors import (
     square_lattice_get_nnn_indices,
     triangular_square_lattice_get_nn_indices,
     triangular_square_lattice_get_nnn_indices,
-    triangular_hexagonal_lattice_get_nn_indices,
-    triangular_hexagonal_lattice_get_nnn_indices,
+    triangular_diamond_lattice_get_nn_indices,
+    triangular_diamond_lattice_get_nnn_indices,
 )
 
 point_distance = 0.1
@@ -165,7 +165,7 @@ def draw_triangular_square_lattice(n=1, periodic_bounds=False):
     )
 
 
-def coords_triangular_hexagonal_lattice(n=1):
+def coords_triangular_diamond_lattice(n=1):
     assert n > 0
     coords = []
 
@@ -185,14 +185,14 @@ def coords_triangular_hexagonal_lattice(n=1):
     return coords
 
 
-def draw_triangular_hexagonal_lattice(n=1, periodic_bounds=False):
-    coords = coords_triangular_hexagonal_lattice(n=n)
+def draw_triangular_diamond_lattice(n=1, periodic_bounds=False):
+    coords = coords_triangular_diamond_lattice(n=n)
 
     draw_lattice(
         coords,
         2 * n,
-        nn_function=triangular_hexagonal_lattice_get_nn_indices,
-        nnn_function=triangular_hexagonal_lattice_get_nnn_indices,
+        nn_function=triangular_diamond_lattice_get_nn_indices,
+        nnn_function=triangular_diamond_lattice_get_nnn_indices,
         periodic_bounds=periodic_bounds,
     )
 
@@ -201,4 +201,4 @@ if __name__ == "__main__":
     # draw_square_lattice(6, True)
     # draw_triangular_square_lattice(3, True)
 
-    draw_triangular_hexagonal_lattice(4, True)
+    draw_triangular_diamond_lattice(4, True)
