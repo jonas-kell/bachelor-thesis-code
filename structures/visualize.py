@@ -8,6 +8,8 @@ from neighbors import (
     triangular_square_lattice_get_nnn_indices,
     triangular_diamond_lattice_get_nn_indices,
     triangular_diamond_lattice_get_nnn_indices,
+    triangular_hexagonal_nr_lattice_sites,
+    triangular_hexagonal_index_to_qr,
 )
 
 point_distance = 0.1
@@ -211,19 +213,17 @@ def draw_triangular_diamond_lattice(size=1, periodic_bounds=False):
     )
 
 
-def coords_triangular_hexagonal_lattice(n=1):
-    assert n > 0
+def coords_triangular_hexagonal_lattice(n=2):
+    assert n > 1
+
     coords = []
 
-    index = 0
-    for r in range(-n + 1, n):
-        for q in range(-n + 1, n):
-            s = 0 - q - r
+    for index in range(triangular_hexagonal_nr_lattice_sites(n)):
+        q, r = triangular_hexagonal_index_to_qr(index, n)
 
-            if max(abs(q), abs(r), abs(s)) < n:
-                x, y = cube_coordinatex_to_cartesian_coordinates(q=q, r=r, s=s)
-                coords.append((index, x, y))
-                index += 1
+        x, y = cube_coordinatex_to_cartesian_coordinates(q=q, r=r)
+
+        coords.append((index, x, y))
 
     return coords
 
@@ -243,11 +243,11 @@ def draw_triangular_hexagonal_lattice(size=1, periodic_bounds=False):
     )
 
 
-def cube_coordinatex_to_cartesian_coordinates(q, r, s):
+def cube_coordinatex_to_cartesian_coordinates(q, r):
     vertical_spacing = math.sqrt(3) / 2 * point_distance
     horizontal_spacing = point_distance
 
-    assert q + r + s == 0
+    # s = 0 - q - r
 
     x = q * horizontal_spacing + r * horizontal_spacing / 2
     y = -r * vertical_spacing
