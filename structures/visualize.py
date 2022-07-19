@@ -14,6 +14,8 @@ from neighbors import (
     triangular_hexagonal_lattice_get_nnn_indices,
     hexagonal_index_to_qr,
     hexagonal_nr_lattice_sites,
+    hexagonal_lattice_get_nn_indices,
+    hexagonal_lattice_get_nnn_indices,
 )
 
 point_distance = 0.1
@@ -270,8 +272,8 @@ def draw_hexagonal_lattice(size=1, periodic_bounds=False):
         n=size,
         width_x=(2 * size) - 1 + 2 * size * math.cos(60.0 / 180.0 * math.pi),
         width_y=(2 * size) - 1 + 2 * size * math.cos(60.0 / 180.0 * math.pi),
-        # nn_function=hexagonal_lattice_get_nn_indices,
-        # nnn_function=hexagonal_lattice_get_nnn_indices,
+        nn_function=hexagonal_lattice_get_nn_indices,
+        nnn_function=hexagonal_lattice_get_nnn_indices,
         periodic_bounds=periodic_bounds,
     )
 
