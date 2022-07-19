@@ -286,31 +286,29 @@ def triangular_hexagonal_qr_to_index(q, r, n, periodic_bounds=True):
     s = 0 - q - r
     if max(abs(q), abs(r), abs(s)) >= n:
         if periodic_bounds:
-            if q >= n and -n < r < n and -n <= s < n:
-                q = q - 2 * n + 1
-                r = r + n - 1
-            elif -n < q < n and -n < r <= n and s <= -n:
-                q = q - n + 1
-                r = r - n
-            elif -n <= q < n and r >= n and -n < s < n:
-                q = q + n
-                r = r - 2 * n + 1
-            elif q <= -n and -n < r < n and -n < s <= n:
-                q = q + 2 * n - 1
-                r = r - n + 1
-            elif -n < q < n and -n <= r < n and s >= n:
-                q = q + n - 1
-                r = r + n
-            elif -n < q <= n and r <= -n and -n < s < n:
-                q = q - n
-                r = r + 2 * n - 1
-            else:
+            fixed = False
+            for try_q, try_r in [
+                (q - 2 * n + 1, r + n - 1),
+                (q - n + 1, r - n),
+                (q + n, r - 2 * n + 1),
+                (q + 2 * n - 1, r - n + 1),
+                (q + n - 1, r + n),
+                (q - n, r + 2 * n - 1),
+            ]:
+                try_s = 0 - try_q - try_r
+
+                if max(abs(try_q), abs(try_r), abs(try_s)) < n:
+                    q = try_q
+                    r = try_r
+                    s = try_s
+
+                    fixed = True
+                    break
+
+            if not fixed:
                 raise RuntimeError(
                     f"Too far into periodic bounds, not defined: q({q}) r({r}) s({s}),  n({n})"
                 )
-
-            # fix s
-            s = 0 - q - r
         else:
             return -1
 
