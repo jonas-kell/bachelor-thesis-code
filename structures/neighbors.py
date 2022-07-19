@@ -2,7 +2,7 @@ def square_lattice_get_nn_indices(index, n, periodic_bounds=False):
     assert n > 0
     neighbors = []
 
-    if not 0 <= index < n * n:
+    if not 0 <= index < square_nr_lattice_sites(n):
         return neighbors
 
     x = index % n
@@ -24,7 +24,7 @@ def square_lattice_get_nnn_indices(index, n, periodic_bounds=False):
     assert n > 0
     neighbors = []
 
-    if not 0 <= index < n * n:
+    if not 0 <= index < square_nr_lattice_sites(n):
         return neighbors
 
     x = index % n
@@ -42,13 +42,19 @@ def square_lattice_get_nnn_indices(index, n, periodic_bounds=False):
     return neighbors
 
 
+def square_nr_lattice_sites(n):
+    assert n > 0
+
+    return n * n
+
+
 def triangular_square_lattice_get_nn_indices(index, n, periodic_bounds=False):
     assert n > 0
     assert n % 2 == 0
 
     neighbors = []
 
-    if not 0 <= index < n * n:
+    if not 0 <= index < triangular_square_nr_lattice_sites(n):
         return neighbors
 
     x = index % n
@@ -74,7 +80,7 @@ def triangular_square_lattice_get_nnn_indices(index, n, periodic_bounds=False):
 
     neighbors = []
 
-    if not 0 <= index < n * n:
+    if not 0 <= index < triangular_square_nr_lattice_sites(n):
         return neighbors
 
     x = index % n
@@ -94,12 +100,18 @@ def triangular_square_lattice_get_nnn_indices(index, n, periodic_bounds=False):
     return neighbors
 
 
+def triangular_square_nr_lattice_sites(n):
+    assert n > 0
+
+    return n * n
+
+
 def triangular_diamond_lattice_get_nn_indices(index, n, periodic_bounds=False):
     assert n > 0
 
     neighbors = []
 
-    if not 0 <= index < (n + 1) * (n + 1):
+    if not 0 <= index < triangular_dimond_nr_lattice_sites(n):
         return neighbors
 
     y, x = triangular_dimond_index_to_row_col(index, n)
@@ -129,7 +141,7 @@ def triangular_diamond_lattice_get_nnn_indices(index, n, periodic_bounds=False):
 
     neighbors = []
 
-    if not 0 <= index < (n + 1) * (n + 1):
+    if not 0 <= index < triangular_dimond_nr_lattice_sites(n):
         return neighbors
 
     y, x = triangular_dimond_index_to_row_col(index, n)
@@ -152,6 +164,12 @@ def triangular_diamond_lattice_get_nnn_indices(index, n, periodic_bounds=False):
     neighbors = [i for i in neighbors if i >= 0]
 
     return neighbors
+
+
+def triangular_dimond_nr_lattice_sites(n):
+    assert n > 0
+
+    return (n + 1) * (n + 1)
 
 
 def triangular_dimond_index_to_row_col(index, n):
@@ -329,16 +347,7 @@ def triangular_hexagonal_qr_to_index(q, r, n, periodic_bounds=True):
 def triangular_hexagonal_nr_lattice_sites(n):
     assert n > 1
 
-    number = 0
-
-    for r in range(-n + 1, n):
-        for q in range(-n + 1, n):
-            s = 0 - q - r
-
-            if max(abs(q), abs(r), abs(s)) < n:
-                number += 1
-
-    return number
+    return 3 * n**2 - 3 * n + 1
 
 
 def hexagonal_index_to_qr(index, n):
@@ -527,5 +536,10 @@ if __name__ == "__main__":
     # print(qr_part_of_hexagonal_lattice(-1, 1))
     # print(qr_part_of_hexagonal_lattice(-1, 1))
     # print(qr_part_of_hexagonal_lattice(-1, 0))
+
+    # print(triangular_hexagonal_nr_lattice_sites(2))
+    # print(triangular_hexagonal_nr_lattice_sites(3))
+    # print(triangular_hexagonal_nr_lattice_sites(4))
+    # print(triangular_hexagonal_nr_lattice_sites(5))
 
     pass

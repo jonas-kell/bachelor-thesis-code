@@ -12,8 +12,8 @@ from neighbors import (
     triangular_hexagonal_index_to_qr,
     triangular_hexagonal_lattice_get_nn_indices,
     triangular_hexagonal_lattice_get_nnn_indices,
-    hexagonal_index_to_qr,
     hexagonal_nr_lattice_sites,
+    hexagonal_index_to_qr,
     hexagonal_lattice_get_nn_indices,
     hexagonal_lattice_get_nnn_indices,
 )
@@ -291,8 +291,8 @@ def cube_coordinates_to_cartesian_coordinates(q, r):
 
 
 if __name__ == "__main__":
-    # draw_square_lattice(6, True)
-    # draw_triangular_square_lattice(3, True)
-    # draw_triangular_diamond_lattice(4, True)
-    # draw_triangular_hexagonal_lattice(4, True)
+    draw_square_lattice(6, True)
+    draw_triangular_square_lattice(3, True)
+    draw_triangular_diamond_lattice(4, True)
+    draw_triangular_hexagonal_lattice(4, True)
     draw_hexagonal_lattice(3, True)
