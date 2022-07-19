@@ -1,4 +1,5 @@
 def square_lattice_get_nn_indices(index, n, periodic_bounds=False):
+    assert n > 0
     neighbors = []
 
     if not 0 <= index < n * n:
@@ -20,6 +21,7 @@ def square_lattice_get_nn_indices(index, n, periodic_bounds=False):
 
 
 def square_lattice_get_nnn_indices(index, n, periodic_bounds=False):
+    assert n > 0
     neighbors = []
 
     if not 0 <= index < n * n:
@@ -41,6 +43,7 @@ def square_lattice_get_nnn_indices(index, n, periodic_bounds=False):
 
 
 def triangular_square_lattice_get_nn_indices(index, n, periodic_bounds=False):
+    assert n > 0
     assert n % 2 == 0
 
     neighbors = []
@@ -66,6 +69,7 @@ def triangular_square_lattice_get_nn_indices(index, n, periodic_bounds=False):
 
 
 def triangular_square_lattice_get_nnn_indices(index, n, periodic_bounds=False):
+    assert n > 0
     assert n % 2 == 0
 
     neighbors = []
@@ -90,9 +94,8 @@ def triangular_square_lattice_get_nnn_indices(index, n, periodic_bounds=False):
     return neighbors
 
 
-def triangular_diamond_lattice_get_nn_indices(index, rows, periodic_bounds=False):
-    assert rows % 2 == 0
-    n = rows // 2
+def triangular_diamond_lattice_get_nn_indices(index, n, periodic_bounds=False):
+    assert n > 0
 
     neighbors = []
 
@@ -119,9 +122,8 @@ def triangular_diamond_lattice_get_nn_indices(index, rows, periodic_bounds=False
     return neighbors
 
 
-def triangular_diamond_lattice_get_nnn_indices(index, rows, periodic_bounds=False):
-    assert rows % 2 == 0
-    n = rows // 2
+def triangular_diamond_lattice_get_nnn_indices(index, n, periodic_bounds=False):
+    assert n > 0
 
     neighbors = []
 
@@ -149,6 +151,8 @@ def triangular_diamond_lattice_get_nnn_indices(index, rows, periodic_bounds=Fals
 
 
 def triag_dimond_index_to_row_col(index, n):
+    assert n > 0
+
     row = 0
     col = 0
 
@@ -164,6 +168,8 @@ def triag_dimond_index_to_row_col(index, n):
 
 
 def triag_dimond_row_col_to_index(row, col, n, periodic_bounds=True):
+    assert n > 0
+
     if (
         (row < 0)
         or (col < 0)

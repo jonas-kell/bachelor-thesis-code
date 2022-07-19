@@ -14,21 +14,29 @@ point_distance = 0.1
 highlight_index = -1
 
 # Draw a point based on the x, y axis value.
-def draw_point(x, y, label="", most_point_distances=1, c="#0000aa"):
+def draw_point(x, y, label="", width_x=1, width_y=1, c="#0000aa"):
     plt.scatter(x, y, s=30, c=c)
     plt.text(
-        x - 0.01 * point_distance * most_point_distances,
-        y - 0.03 * point_distance * most_point_distances,
+        x - 0.01 * point_distance * width_x,
+        y - 0.03 * point_distance * width_y,
         str(label),
     )
 
 
 # iterate over list of points to draw lattice
-def draw_lattice(coords, n, nn_function=None, nnn_function=None, periodic_bounds=False):
+def draw_lattice(
+    coords,
+    n,
+    width_x=1,
+    width_y=1,
+    nn_function=None,
+    nnn_function=None,
+    periodic_bounds=False,
+):
     global highlight_index
 
     while True:
-        init(coords)
+        init(coords, width_x, width_y)
 
         if nn_function is None:
             nn_indices = []
@@ -45,7 +53,8 @@ def draw_lattice(coords, n, nn_function=None, nnn_function=None, periodic_bounds
                 x,
                 y,
                 index,
-                most_point_distances=n,
+                width_x=width_x,
+                width_y=width_y,
                 c="#aa0000"
                 if index == highlight_index
                 else (
@@ -59,8 +68,8 @@ def draw_lattice(coords, n, nn_function=None, nnn_function=None, periodic_bounds
 
 
 # init plot surface
-def init(coords):
-    fig = plt.figure(figsize=(9, 9))
+def init(coords, width_x, width_y):
+    fig = plt.figure(figsize=(9 * width_x / width_y, 9))
 
     def onclick(event):
         global highlight_index
@@ -113,20 +122,23 @@ def coords_square_lattice(n=1):
     return coords
 
 
-def draw_square_lattice(n=1, periodic_bounds=False):
-    coords = coords_square_lattice(n=n)
+def draw_square_lattice(size=1, periodic_bounds=False):
+    coords = coords_square_lattice(n=size)
 
     draw_lattice(
         coords,
-        n,
+        n=size,
+        width_x=size,
+        width_y=size,
         nn_function=square_lattice_get_nn_indices,
         nnn_function=square_lattice_get_nnn_indices,
         periodic_bounds=periodic_bounds,
     )
 
 
-def coords_triangular_square_lattice(n=1):
+def coords_triangular_square_lattice(n=2):
     assert n > 0
+    assert n % 2 == 0
     coords = []
 
     y_step = math.sin(60 / 180 * math.pi) * point_distance
@@ -134,11 +146,9 @@ def coords_triangular_square_lattice(n=1):
 
     y_value = 0
 
-    size = 2 * n
-
     index = 0
-    for i in range(size):  # row
-        for j in range(size):  # "col"
+    for i in range(n):  # row
+        for j in range(n):  # "col"
 
             if i % 2 == 0:
                 # "right" row
@@ -153,12 +163,14 @@ def coords_triangular_square_lattice(n=1):
     return coords
 
 
-def draw_triangular_square_lattice(n=1, periodic_bounds=False):
-    coords = coords_triangular_square_lattice(n=n)
+def draw_triangular_square_lattice(size=1, periodic_bounds=False):
+    coords = coords_triangular_square_lattice(n=2 * size)
 
     draw_lattice(
         coords,
-        2 * n,
+        n=2 * size,
+        width_x=2 * size - 0.5,
+        width_y=(2 * size - 1) * math.sin(60.0 / 180.0 * math.pi),
         nn_function=triangular_square_lattice_get_nn_indices,
         nnn_function=triangular_square_lattice_get_nnn_indices,
         periodic_bounds=periodic_bounds,
@@ -185,12 +197,14 @@ def coords_triangular_diamond_lattice(n=1):
     return coords
 
 
-def draw_triangular_diamond_lattice(n=1, periodic_bounds=False):
-    coords = coords_triangular_diamond_lattice(n=n)
+def draw_triangular_diamond_lattice(size=1, periodic_bounds=False):
+    coords = coords_triangular_diamond_lattice(n=size)
 
     draw_lattice(
         coords,
-        2 * n,
+        n=size,
+        width_x=size,
+        width_y=2 * size * math.sin(60.0 / 180.0 * math.pi),
         nn_function=triangular_diamond_lattice_get_nn_indices,
         nnn_function=triangular_diamond_lattice_get_nnn_indices,
         periodic_bounds=periodic_bounds,
@@ -200,5 +214,4 @@ def draw_triangular_diamond_lattice(n=1, periodic_bounds=False):
 if __name__ == "__main__":
     # draw_square_lattice(6, True)
     # draw_triangular_square_lattice(3, True)
-
-    draw_triangular_diamond_lattice(6, True)
+    draw_triangular_diamond_lattice(4, True)
