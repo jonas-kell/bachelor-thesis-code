@@ -10,6 +10,8 @@ from neighbors import (
     triangular_diamond_lattice_get_nnn_indices,
     triangular_hexagonal_nr_lattice_sites,
     triangular_hexagonal_index_to_qr,
+    triangular_hexagonal_lattice_get_nn_indices,
+    triangular_hexagonal_lattice_get_nnn_indices,
 )
 
 point_distance = 0.1
@@ -237,8 +239,8 @@ def draw_triangular_hexagonal_lattice(size=1, periodic_bounds=False):
         n=n,
         width_x=2 * size,
         width_y=(2 * size) * math.sin(60.0 / 180.0 * math.pi),
-        # nn_function=triangular_hexagonal_lattice_get_nn_indices,
-        # nnn_function=triangular_hexagonal_lattice_get_nn_indices,
+        nn_function=triangular_hexagonal_lattice_get_nn_indices,
+        nnn_function=triangular_hexagonal_lattice_get_nnn_indices,
         periodic_bounds=periodic_bounds,
     )
 
@@ -260,4 +262,4 @@ if __name__ == "__main__":
     # draw_triangular_square_lattice(3, True)
     # draw_triangular_diamond_lattice(4, True)
 
-    draw_triangular_hexagonal_lattice(3, True)
+    draw_triangular_hexagonal_lattice(3, False)
