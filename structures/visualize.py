@@ -211,7 +211,53 @@ def draw_triangular_diamond_lattice(size=1, periodic_bounds=False):
     )
 
 
+def coords_triangular_hexagonal_lattice(n=1):
+    assert n > 0
+    coords = []
+
+    index = 0
+    for r in range(-n + 1, n):
+        for q in range(-n + 1, n):
+            s = 0 - q - r
+
+            if max(abs(q), abs(r), abs(s)) < n:
+                x, y = cube_coordinatex_to_cartesian_coordinates(q=q, r=r, s=s)
+                coords.append((index, x, y))
+                index += 1
+
+    return coords
+
+
+def draw_triangular_hexagonal_lattice(size=1, periodic_bounds=False):
+    n = size + 1
+    coords = coords_triangular_hexagonal_lattice(n=n)
+
+    draw_lattice(
+        coords,
+        n=n,
+        width_x=2 * size,
+        width_y=(2 * size) * math.sin(60.0 / 180.0 * math.pi),
+        # nn_function=triangular_hexagonal_lattice_get_nn_indices,
+        # nnn_function=triangular_hexagonal_lattice_get_nn_indices,
+        periodic_bounds=periodic_bounds,
+    )
+
+
+def cube_coordinatex_to_cartesian_coordinates(q, r, s):
+    vertical_spacing = math.sqrt(3) / 2 * point_distance
+    horizontal_spacing = point_distance
+
+    assert q + r + s == 0
+
+    x = q * horizontal_spacing + r * horizontal_spacing / 2
+    y = -r * vertical_spacing
+
+    return x, y
+
+
 if __name__ == "__main__":
     # draw_square_lattice(6, True)
     # draw_triangular_square_lattice(3, True)
-    draw_triangular_diamond_lattice(4, True)
+    # draw_triangular_diamond_lattice(4, True)
+
+    draw_triangular_hexagonal_lattice(3, True)
