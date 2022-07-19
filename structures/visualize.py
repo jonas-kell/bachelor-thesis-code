@@ -223,7 +223,7 @@ def coords_triangular_hexagonal_lattice(n=2):
     for index in range(triangular_hexagonal_nr_lattice_sites(n)):
         q, r = triangular_hexagonal_index_to_qr(index, n)
 
-        x, y = cube_coordinatex_to_cartesian_coordinates(q=q, r=r)
+        x, y = cube_coordinates_to_cartesian_coordinates(q=q, r=r)
 
         coords.append((index, x, y))
 
@@ -245,7 +245,7 @@ def draw_triangular_hexagonal_lattice(size=1, periodic_bounds=False):
     )
 
 
-def cube_coordinatex_to_cartesian_coordinates(q, r):
+def cube_coordinates_to_cartesian_coordinates(q, r):
     vertical_spacing = math.sqrt(3) / 2 * point_distance
     horizontal_spacing = point_distance
 
