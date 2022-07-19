@@ -367,23 +367,40 @@ def hexagonal_index_to_qr(index, n):
 def hexagonal_qr_to_index(q, r, n, periodic_bounds=True):
     assert n > 0
 
-    index = 0
-    start_q, start_r = (n - 1, -2 * (n - 1) - 1)
+    for try_q, try_r in [
+        (q, r),
+        (q + 3 * n, r - 3 * n),
+        (q - 3 * n, r + 3 * n),
+        (q, r - 3 * n),
+        (q, r + 3 * n),
+        (q + 3 * n, r),
+        (q - 3 * n, r),
+    ]:
+        # try translation to index for each possible shift (first is unshifted)
+        index = 0
+        start_q, start_r = (n - 1, -2 * (n - 1) - 1)
 
-    for (q_step, r_step), steps in hex_step_iterator(n):
-        for i in range(steps):
-            q_test = start_q + i
-            r_test = start_r
+        for (q_step, r_step), steps in hex_step_iterator(n):
+            for i in range(steps):
+                q_test = start_q + i
+                r_test = start_r
 
-            if qr_part_of_hexagonal_lattice(q_test, r_test):
-                if q == q_test and r == r_test:
-                    return index
-                index += 1
+                if qr_part_of_hexagonal_lattice(q_test, r_test):
+                    if try_q == q_test and try_r == r_test:
+                        return index  # break out of everything and return
+                    index += 1
 
-        start_q += q_step
-        start_r += r_step
+            start_q += q_step
+            start_r += r_step
 
-    return -1
+        # unshifted coords could not be translated, ok for non-periodic lattice
+        if not periodic_bounds:
+            return -1
+
+    # no shift could translate coords, equals error
+    raise RuntimeError(
+        f"Too far into periodic bounds or non-index translatable, not defined: q({q}) r({r}),  n({n})"
+    )
 
 
 def hex_step_iterator(n):
