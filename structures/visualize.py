@@ -12,6 +12,8 @@ from neighbors import (
     triangular_hexagonal_index_to_qr,
     triangular_hexagonal_lattice_get_nn_indices,
     triangular_hexagonal_lattice_get_nnn_indices,
+    hexagonal_index_to_qr,
+    hexagonal_nr_lattice_sites,
 )
 
 point_distance = 0.1
@@ -245,6 +247,35 @@ def draw_triangular_hexagonal_lattice(size=1, periodic_bounds=False):
     )
 
 
+def coords_hexagonal_lattice(n=1):
+    assert n > 0
+
+    coords = []
+
+    for index in range(hexagonal_nr_lattice_sites(n)):
+        q, r = hexagonal_index_to_qr(index, n)
+
+        x, y = cube_coordinates_to_cartesian_coordinates(q=q, r=r)
+
+        coords.append((index, x, y))
+
+    return coords
+
+
+def draw_hexagonal_lattice(size=1, periodic_bounds=False):
+    coords = coords_hexagonal_lattice(n=size)
+
+    draw_lattice(
+        coords,
+        n=size,
+        width_x=(2 * size) - 1 + 2 * size * math.cos(60.0 / 180.0 * math.pi),
+        width_y=(2 * size) - 1 + 2 * size * math.cos(60.0 / 180.0 * math.pi),
+        # nn_function=hexagonal_lattice_get_nn_indices,
+        # nnn_function=hexagonal_lattice_get_nnn_indices,
+        periodic_bounds=periodic_bounds,
+    )
+
+
 def cube_coordinates_to_cartesian_coordinates(q, r):
     vertical_spacing = math.sqrt(3) / 2 * point_distance
     horizontal_spacing = point_distance
@@ -261,4 +292,5 @@ if __name__ == "__main__":
     # draw_square_lattice(6, True)
     # draw_triangular_square_lattice(3, True)
     # draw_triangular_diamond_lattice(4, True)
-    draw_triangular_hexagonal_lattice(4, True)
+    # draw_triangular_hexagonal_lattice(4, True)
+    draw_hexagonal_lattice(3, True)

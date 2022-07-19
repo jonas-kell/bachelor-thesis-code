@@ -327,6 +327,8 @@ def triangular_hexagonal_qr_to_index(q, r, n, periodic_bounds=True):
 
 # too lazy to calculate closed expression for this. Sry
 def triangular_hexagonal_nr_lattice_sites(n):
+    assert n > 1
+
     number = 0
 
     for r in range(-n + 1, n):
@@ -337,6 +339,60 @@ def triangular_hexagonal_nr_lattice_sites(n):
                 number += 1
 
     return number
+
+
+def hexagonal_index_to_qr(index, n):
+    assert n > 0
+    assert 0 <= index < hexagonal_nr_lattice_sites(n)
+
+    index_test = 0
+    start_q, start_r = (n - 1, -2 * (n - 1) - 1)
+
+    jumps_to_next_start = (
+        [(-2, +1)] * (n - 1) + [(-1, +1), (0, +1)] * n + [(+1, +1)] * (n - 1) + [(0, 0)]
+    )
+    steps_to_take = (
+        [2 * i + i - 1 for i in range(1, n)]
+        + [3 * n - 1, 3 * n] * n
+        + [2 * i + i - 1 for i in range(n, 0, -1)]
+    )
+
+    for (q_step, r_step), steps in zip(jumps_to_next_start, steps_to_take):
+        for i in range(steps):
+            q = start_q + i
+            r = start_r
+
+            if qr_part_of_hexagonal_lattice(q, r):
+                if index_test == index:
+                    return q, r
+                index_test += 1
+
+        start_q += q_step
+        start_r += r_step
+
+    return -1, -1
+
+
+def hexagonal_qr_to_index(q, r, n, periodic_bounds=True):
+    assert n > 0
+
+    return -1
+
+
+def hexagonal_nr_lattice_sites(n):
+    assert n > 0
+
+    return 6 * n**2
+
+
+def qr_part_of_hexagonal_lattice(q, r):
+    nr_up_shifts = r // 2
+    r = r - nr_up_shifts * 2
+    q = q + nr_up_shifts
+
+    q = q % 3
+
+    return not ((q == 0 and r == 0) or (q == 1 and r == 1))
 
 
 if __name__ == "__main__":
@@ -362,5 +418,19 @@ if __name__ == "__main__":
     # print(triangular_dimond_row_col_to_index(3, 0, 2))
     # print(triangular_dimond_row_col_to_index(3, 1, 2))
     # print(triangular_dimond_row_col_to_index(4, 0, 2))
+
+    # print(qr_part_of_hexagonal_lattice(0, 0))
+    # print(qr_part_of_hexagonal_lattice(3, 0))
+    # print(qr_part_of_hexagonal_lattice(2, 2))
+    # print(qr_part_of_hexagonal_lattice(-5, 1))
+    # print(qr_part_of_hexagonal_lattice(2, -1))
+    # print("asd")
+    # print(qr_part_of_hexagonal_lattice(0, -1))
+    # print(qr_part_of_hexagonal_lattice(1, -1))
+    # print(qr_part_of_hexagonal_lattice(1, 0))
+    # print(qr_part_of_hexagonal_lattice(0, 1))
+    # print(qr_part_of_hexagonal_lattice(-1, 1))
+    # print(qr_part_of_hexagonal_lattice(-1, 1))
+    # print(qr_part_of_hexagonal_lattice(-1, 0))
 
     pass
