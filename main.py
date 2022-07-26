@@ -24,38 +24,80 @@ from structures.lattice_parameter_resolver import resolve_lattice_parameters
 sys.path.append(os.path.abspath("./computation"))
 from computation.ground_state_search import execute_ground_state_search
 
-
 sys.path.append(os.path.abspath("./models"))
 from models.preconfigured import cnn
 
+# local folder constants
+tensorboard_folder_path = "/media/jonas/69B577D0C4C25263/MLData/tensorboard_jax/"
 
-if __name__ == "__main__":
-    n_steps = 1000
-    n_samples = 40000
 
-    lattice_shape = "linear"
-    # lattice_shape = "cubic"
-    # lattice_shape = "trigonal_square"
-    # lattice_shape = "trigonal_diamond"
-    # lattice_shape = "trigonal_hexagonal"
-    # lattice_shape = "hexagonal"
+# add custom configurations in this dict
+available_models = {
+    "CNN": lambda lattice_parameters: cnn(lattice_parameters["nr_sites"]),
+}
 
-    lattice_size = 6
-    lattice_periodic = True
 
+def execute_computation(
+    n_steps: int,
+    n_samples: int,
+    lattice_shape: int,
+    lattice_size: int,
+    lattice_periodic: int,
+    model_name: int,
+    hamiltonian_J_parameter=-1.0,
+    hamiltonian_h_parameter=-0.7,
+):
     lattice_parameters = resolve_lattice_parameters(
         shape=lattice_shape, size=lattice_size, periodic=lattice_periodic
     )
 
-    tensorboard_folder_path = "/media/jonas/69B577D0C4C25263/MLData/tensorboard_jax/"
+    model_name = "CNN"
+    if model_name in available_models:
+        model = available_models[model_name](lattice_parameters)
 
     execute_ground_state_search(
         n_steps=n_steps,
         n_samples=n_samples,
         lattice_parameters=lattice_parameters,
-        model_name="CNN",
-        model=cnn(lattice_parameters["nr_sites"]),
+        model_name=model_name,
+        model=model,
         tensorboard_folder_path=tensorboard_folder_path,
-        hamiltonian_J_parameter=-1.0,
-        hamiltonian_h_parameter=-0.7,
+        hamiltonian_J_parameter=hamiltonian_J_parameter,
+        hamiltonian_h_parameter=hamiltonian_h_parameter,
     )
+
+
+# lattice_shape =
+
+# "linear"
+# "cubic"
+# "trigonal_square"
+# "trigonal_diamond"
+# "trigonal_hexagonal"
+# "hexagonal"
+
+
+if __name__ == "__main__":
+    parameters = {
+        "n_steps": 1000,
+        "n_samples": 40000,
+        "lattice_shape": "linear",
+        "lattice_size": 3,
+        "lattice_periodic": True,
+        "model_name": "CNN",
+    }
+
+    additional_parameter_strings = [] if len(sys.argv) < 2 else sys.argv[1:]
+
+    for additional_parameter_string in additional_parameter_strings:
+        split = additional_parameter_string.split("=", 1)
+
+        if len(split) == 2 and split[0] in parameters:
+            parameters[split[0]] = type(parameters[split[0]])(split[1])
+        else:
+            print(f"Unknown parameter+value: {split}")
+
+    for param in parameters:
+        print(f"Using parameter   {param:20} with value:    {parameters[param]}")
+
+    execute_computation(**parameters)
