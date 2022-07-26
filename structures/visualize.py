@@ -131,13 +131,13 @@ def coords_cubic_lattice(n=1):
 
 
 def draw_cubic_lattice(size=1, periodic_bounds=False):
-    coords = coords_cubic_lattice(n=size)
+    coords = coords_cubic_lattice(n=size + 1)
 
     draw_lattice(
         coords,
-        n=size,
-        width_x=size,
-        width_y=size,
+        n=size + 1,
+        width_x=size + 1,
+        width_y=size + 1,
         nn_function=cubic_lattice_get_nn_indices,
         nnn_function=cubic_lattice_get_nnn_indices,
         periodic_bounds=periodic_bounds,
@@ -291,8 +291,8 @@ def cube_coordinates_to_cartesian_coordinates(q, r):
 
 
 if __name__ == "__main__":
-    draw_cubic_lattice(6, True)
-    draw_trigonal_square_lattice(3, True)
-    draw_trigonal_diamond_lattice(4, True)
-    draw_trigonal_hexagonal_lattice(4, True)
-    draw_hexagonal_lattice(3, True)
+    draw_cubic_lattice(1, True)
+    draw_trigonal_square_lattice(1, True)
+    draw_trigonal_diamond_lattice(1, True)
+    draw_trigonal_hexagonal_lattice(1, True)
+    draw_hexagonal_lattice(1, True)
