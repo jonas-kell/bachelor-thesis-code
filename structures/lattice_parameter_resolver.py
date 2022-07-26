@@ -1,4 +1,6 @@
-import imp
+from typing import Literal, Tuple
+
+
 from neighbors import (
     linear_lattice_get_nn_indices,
     linear_lattice_get_nnn_indices,
@@ -19,7 +21,6 @@ from neighbors import (
     hexagonal_lattice_get_nnn_indices,
     hexagonal_nr_lattice_sites,
 )
-from typing import Literal, Tuple
 
 
 def resolve_lattice_parameters(
@@ -45,7 +46,7 @@ def resolve_lattice_parameters(
         nn_function = linear_lattice_get_nn_indices
         nnn_function = linear_lattice_get_nnn_indices
 
-    if lattice_shape == "cubic":
+    elif lattice_shape == "cubic":
         n = size + 1
         nr_function = cubic_nr_lattice_sites
         nn_function = cubic_lattice_get_nn_indices

@@ -17,8 +17,13 @@ import jVMC
 
 import datetime
 import os
+import sys
+
+sys.path.append(os.path.abspath("./structures"))
 
 from torch.utils.tensorboard import SummaryWriter
+
+from structures.lattice_parameter_resolver import resolve_lattice_parameters
 
 # Check whether GPU is available
 gpu_avail = jax.lib.xla_bridge.get_backend().platform == "gpu"
@@ -32,7 +37,23 @@ if not gpu_avail:
 
 # Get lattice parameters
 
-L = 10
+lattice_shape = "linear"
+# lattice_shape = "cubic"
+# lattice_shape = "trigonal_square",
+# lattice_shape = "trigonal_diamond",
+# lattice_shape = "trigonal_hexagonal",
+# lattice_shape = "hexagonal",
+
+periodic = True
+size = 10
+
+(
+    nr_lattice_sites,
+    nn_interaction_indices,
+    nnn_interaction_indices,
+) = resolve_lattice_parameters(size, lattice_shape, periodic)
+
+L = nr_lattice_sites
 g = -0.7
 
 # Initialize net
@@ -55,11 +76,17 @@ psi = jVMC.vqs.NQS(net, seed=1234)
 # Set up hamiltonian
 hamiltonian = jVMC.operator.BranchFreeOperator()
 for l in range(L):
-    hamiltonian.add(
-        jVMC.operator.scal_opstr(
-            -1.0, (jVMC.operator.Sz(l), jVMC.operator.Sz((l + 1) % L))
+    for l_n in nn_interaction_indices[l]:
+        hamiltonian.add(
+            jVMC.operator.scal_opstr(
+                -0.5,  # TODO more efficient if only one direction is computed
+                (
+                    jVMC.operator.Sz(l),
+                    jVMC.operator.Sz(l_n),
+                ),
+            )
         )
-    )
+        print(l, l_n)
     hamiltonian.add(jVMC.operator.scal_opstr(g, (jVMC.operator.Sx(l),)))
 
 
