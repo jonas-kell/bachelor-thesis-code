@@ -1,5 +1,5 @@
-from typing import Literal, Tuple
-
+from typing import Literal
+from typing import TypedDict
 
 from neighbors import (
     linear_lattice_get_nn_indices,
@@ -23,9 +23,18 @@ from neighbors import (
 )
 
 
+class LatticeParameters(TypedDict):
+    nr_sites: int
+    nn_interaction_indices: list
+    nnn_interaction_indices: list
+    shape_name: str
+    size: int
+    periodic: bool
+
+
 def resolve_lattice_parameters(
     size: int,  # 1 -> ...
-    lattice_shape: Literal[
+    shape: Literal[
         "linear",
         "cubic",
         "trigonal_square",
@@ -34,43 +43,41 @@ def resolve_lattice_parameters(
         "hexagonal",
     ],
     periodic: bool = False,
-) -> Tuple[
-    int, list, list
-]:  # int: number_lattice_sites, list(list(int)): nn_interaction_indices, list(list(int)): nnn_interaction_indices
+) -> LatticeParameters:
     assert int(size) == size
     assert size > 0
 
-    if lattice_shape == "linear":
+    if shape == "linear":
         n = size
         nr_function = linear_nr_lattice_sites
         nn_function = linear_lattice_get_nn_indices
         nnn_function = linear_lattice_get_nnn_indices
 
-    elif lattice_shape == "cubic":
+    elif shape == "cubic":
         n = size + 1
         nr_function = cubic_nr_lattice_sites
         nn_function = cubic_lattice_get_nn_indices
         nnn_function = cubic_lattice_get_nnn_indices
 
-    elif lattice_shape == "trigonal_square":
+    elif shape == "trigonal_square":
         n = 2 * size
         nr_function = trigonal_square_nr_lattice_sites
         nn_function = trigonal_square_lattice_get_nn_indices
         nnn_function = trigonal_square_lattice_get_nnn_indices
 
-    elif lattice_shape == "trigonal_diamond":
+    elif shape == "trigonal_diamond":
         n = size
         nr_function = trigonal_diamond_nr_lattice_sites
         nn_function = trigonal_diamond_lattice_get_nn_indices
         nnn_function = trigonal_diamond_lattice_get_nnn_indices
 
-    elif lattice_shape == "trigonal_hexagonal":
+    elif shape == "trigonal_hexagonal":
         n = size + 1
         nr_function = trigonal_hexagonal_nr_lattice_sites
         nn_function = trigonal_hexagonal_lattice_get_nn_indices
         nnn_function = trigonal_hexagonal_lattice_get_nnn_indices
 
-    elif lattice_shape == "hexagonal":
+    elif shape == "hexagonal":
         n = size
         nr_function = hexagonal_nr_lattice_sites
         nn_function = hexagonal_lattice_get_nn_indices
@@ -88,7 +95,16 @@ def resolve_lattice_parameters(
         [nnn_function(i, n, periodic_bounds=periodic) for i in range(nr_lattice_sites)]
     )
 
-    return (nr_lattice_sites, nn_interaction_indices, nnn_interaction_indices)
+    lattice_parameters = LatticeParameters(
+        nr_sites=nr_lattice_sites,
+        nn_interaction_indices=nn_interaction_indices,
+        nnn_interaction_indices=nnn_interaction_indices,
+        shape_name=shape,
+        size=size,
+        periodic=periodic,
+    )
+
+    return lattice_parameters
 
 
 if __name__ == "__main__":
