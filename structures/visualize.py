@@ -2,6 +2,8 @@ import matplotlib.pyplot as plt
 import math
 
 from neighbors import (
+    linear_lattice_get_nn_indices,
+    linear_lattice_get_nnn_indices,
     cubic_lattice_get_nn_indices,
     cubic_lattice_get_nnn_indices,
     trigonal_square_lattice_get_nn_indices,
@@ -110,6 +112,36 @@ def init(coords, width_x, width_y):
 def show():
     plt.margins(x=2 * point_distance, y=2 * point_distance)
     plt.show()
+
+
+def coords_linear_lattice(n=1):
+    assert n > 0
+
+    coords = []
+    for index in range(n):
+        coords.append(
+            (
+                index,
+                index * point_distance,
+                0,
+            )
+        )
+
+    return coords
+
+
+def draw_linear_lattice(size=1, periodic_bounds=False):
+    coords = coords_linear_lattice(n=size)
+
+    draw_lattice(
+        coords,
+        n=size,
+        width_x=size,
+        width_y=size / 2,
+        nn_function=linear_lattice_get_nn_indices,
+        nnn_function=linear_lattice_get_nnn_indices,
+        periodic_bounds=periodic_bounds,
+    )
 
 
 def coords_cubic_lattice(n=1):
@@ -291,6 +323,7 @@ def cube_coordinates_to_cartesian_coordinates(q, r):
 
 
 if __name__ == "__main__":
+    # draw_linear_lattice(20, False)
     draw_cubic_lattice(1, True)
     draw_trigonal_square_lattice(1, True)
     draw_trigonal_diamond_lattice(1, True)

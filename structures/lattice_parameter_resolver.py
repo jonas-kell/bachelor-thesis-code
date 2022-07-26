@@ -1,5 +1,8 @@
 import imp
 from neighbors import (
+    linear_lattice_get_nn_indices,
+    linear_lattice_get_nnn_indices,
+    linear_nr_lattice_sites,
     cubic_lattice_get_nn_indices,
     cubic_lattice_get_nnn_indices,
     cubic_nr_lattice_sites,
@@ -22,6 +25,7 @@ from typing import Literal, Tuple
 def resolve_lattice_parameters(
     size: int,  # 1 -> ...
     lattice_shape: Literal[
+        "linear",
         "cubic",
         "trigonal_square",
         "trigonal_diamond",
@@ -34,6 +38,12 @@ def resolve_lattice_parameters(
 ]:  # int: number_lattice_sites, list(list(int)): nn_interaction_indices, list(list(int)): nnn_interaction_indices
     assert int(size) == size
     assert size > 0
+
+    if lattice_shape == "linear":
+        n = size
+        nr_function = linear_nr_lattice_sites
+        nn_function = linear_lattice_get_nn_indices
+        nnn_function = linear_lattice_get_nnn_indices
 
     if lattice_shape == "cubic":
         n = size + 1

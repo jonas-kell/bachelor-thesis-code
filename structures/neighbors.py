@@ -1,3 +1,43 @@
+def linear_lattice_get_nn_indices(index, n, periodic_bounds=False):
+    assert n > 0
+    neighbors = []
+
+    if not 0 <= index < linear_nr_lattice_sites(n):
+        return neighbors
+
+    right = index + 1
+    if (0 <= right < linear_nr_lattice_sites(n)) or periodic_bounds:
+        neighbors.append(right % n)
+    left = index - 1
+    if (0 <= left < linear_nr_lattice_sites(n)) or periodic_bounds:
+        neighbors.append(left % n)
+
+    return neighbors
+
+
+def linear_lattice_get_nnn_indices(index, n, periodic_bounds=False):
+    assert n > 0
+    neighbors = []
+
+    if not 0 <= index < linear_nr_lattice_sites(n):
+        return neighbors
+
+    right = index + 2
+    if (0 <= right < linear_nr_lattice_sites(n)) or periodic_bounds:
+        neighbors.append(right % n)
+    left = index - 2
+    if (0 <= left < linear_nr_lattice_sites(n)) or periodic_bounds:
+        neighbors.append(left % n)
+
+    return neighbors
+
+
+def linear_nr_lattice_sites(n):
+    assert n > 0
+
+    return n
+
+
 def cubic_lattice_get_nn_indices(index, n, periodic_bounds=False):
     assert n > 0
     neighbors = []
