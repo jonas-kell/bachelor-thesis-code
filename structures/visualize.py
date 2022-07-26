@@ -2,16 +2,16 @@ import matplotlib.pyplot as plt
 import math
 
 from neighbors import (
-    square_lattice_get_nn_indices,
-    square_lattice_get_nnn_indices,
-    triangular_square_lattice_get_nn_indices,
-    triangular_square_lattice_get_nnn_indices,
-    triangular_diamond_lattice_get_nn_indices,
-    triangular_diamond_lattice_get_nnn_indices,
-    triangular_hexagonal_nr_lattice_sites,
-    triangular_hexagonal_index_to_qr,
-    triangular_hexagonal_lattice_get_nn_indices,
-    triangular_hexagonal_lattice_get_nnn_indices,
+    cubic_lattice_get_nn_indices,
+    cubic_lattice_get_nnn_indices,
+    trigonal_square_lattice_get_nn_indices,
+    trigonal_square_lattice_get_nnn_indices,
+    trigonal_diamond_lattice_get_nn_indices,
+    trigonal_diamond_lattice_get_nnn_indices,
+    trigonal_hexagonal_nr_lattice_sites,
+    trigonal_hexagonal_index_to_qr,
+    trigonal_hexagonal_lattice_get_nn_indices,
+    trigonal_hexagonal_lattice_get_nnn_indices,
     hexagonal_nr_lattice_sites,
     hexagonal_index_to_qr,
     hexagonal_lattice_get_nn_indices,
@@ -112,7 +112,7 @@ def show():
     plt.show()
 
 
-def coords_square_lattice(n=1):
+def coords_cubic_lattice(n=1):
     assert n > 0
     coords = []
     index = 0
@@ -130,21 +130,21 @@ def coords_square_lattice(n=1):
     return coords
 
 
-def draw_square_lattice(size=1, periodic_bounds=False):
-    coords = coords_square_lattice(n=size)
+def draw_cubic_lattice(size=1, periodic_bounds=False):
+    coords = coords_cubic_lattice(n=size)
 
     draw_lattice(
         coords,
         n=size,
         width_x=size,
         width_y=size,
-        nn_function=square_lattice_get_nn_indices,
-        nnn_function=square_lattice_get_nnn_indices,
+        nn_function=cubic_lattice_get_nn_indices,
+        nnn_function=cubic_lattice_get_nnn_indices,
         periodic_bounds=periodic_bounds,
     )
 
 
-def coords_triangular_square_lattice(n=2):
+def coords_trigonal_square_lattice(n=2):
     assert n > 0
     assert n % 2 == 0
     coords = []
@@ -171,21 +171,21 @@ def coords_triangular_square_lattice(n=2):
     return coords
 
 
-def draw_triangular_square_lattice(size=1, periodic_bounds=False):
-    coords = coords_triangular_square_lattice(n=2 * size)
+def draw_trigonal_square_lattice(size=1, periodic_bounds=False):
+    coords = coords_trigonal_square_lattice(n=2 * size)
 
     draw_lattice(
         coords,
         n=2 * size,
         width_x=2 * size - 0.5,
         width_y=(2 * size - 1) * math.sin(60.0 / 180.0 * math.pi),
-        nn_function=triangular_square_lattice_get_nn_indices,
-        nnn_function=triangular_square_lattice_get_nnn_indices,
+        nn_function=trigonal_square_lattice_get_nn_indices,
+        nnn_function=trigonal_square_lattice_get_nnn_indices,
         periodic_bounds=periodic_bounds,
     )
 
 
-def coords_triangular_diamond_lattice(n=1):
+def coords_trigonal_diamond_lattice(n=1):
     assert n > 0
     coords = []
 
@@ -205,27 +205,27 @@ def coords_triangular_diamond_lattice(n=1):
     return coords
 
 
-def draw_triangular_diamond_lattice(size=1, periodic_bounds=False):
-    coords = coords_triangular_diamond_lattice(n=size)
+def draw_trigonal_diamond_lattice(size=1, periodic_bounds=False):
+    coords = coords_trigonal_diamond_lattice(n=size)
 
     draw_lattice(
         coords,
         n=size,
         width_x=size,
         width_y=2 * size * math.sin(60.0 / 180.0 * math.pi),
-        nn_function=triangular_diamond_lattice_get_nn_indices,
-        nnn_function=triangular_diamond_lattice_get_nnn_indices,
+        nn_function=trigonal_diamond_lattice_get_nn_indices,
+        nnn_function=trigonal_diamond_lattice_get_nnn_indices,
         periodic_bounds=periodic_bounds,
     )
 
 
-def coords_triangular_hexagonal_lattice(n=2):
+def coords_trigonal_hexagonal_lattice(n=2):
     assert n > 1
 
     coords = []
 
-    for index in range(triangular_hexagonal_nr_lattice_sites(n)):
-        q, r = triangular_hexagonal_index_to_qr(index, n)
+    for index in range(trigonal_hexagonal_nr_lattice_sites(n)):
+        q, r = trigonal_hexagonal_index_to_qr(index, n)
 
         x, y = cube_coordinates_to_cartesian_coordinates(q=q, r=r)
 
@@ -234,17 +234,17 @@ def coords_triangular_hexagonal_lattice(n=2):
     return coords
 
 
-def draw_triangular_hexagonal_lattice(size=1, periodic_bounds=False):
+def draw_trigonal_hexagonal_lattice(size=1, periodic_bounds=False):
     n = size + 1
-    coords = coords_triangular_hexagonal_lattice(n=n)
+    coords = coords_trigonal_hexagonal_lattice(n=n)
 
     draw_lattice(
         coords,
         n=n,
         width_x=2 * size,
         width_y=(2 * size) * math.sin(60.0 / 180.0 * math.pi),
-        nn_function=triangular_hexagonal_lattice_get_nn_indices,
-        nnn_function=triangular_hexagonal_lattice_get_nnn_indices,
+        nn_function=trigonal_hexagonal_lattice_get_nn_indices,
+        nnn_function=trigonal_hexagonal_lattice_get_nnn_indices,
         periodic_bounds=periodic_bounds,
     )
 
@@ -291,8 +291,8 @@ def cube_coordinates_to_cartesian_coordinates(q, r):
 
 
 if __name__ == "__main__":
-    draw_square_lattice(6, True)
-    draw_triangular_square_lattice(3, True)
-    draw_triangular_diamond_lattice(4, True)
-    draw_triangular_hexagonal_lattice(4, True)
+    draw_cubic_lattice(6, True)
+    draw_trigonal_square_lattice(3, True)
+    draw_trigonal_diamond_lattice(4, True)
+    draw_trigonal_hexagonal_lattice(4, True)
     draw_hexagonal_lattice(3, True)
