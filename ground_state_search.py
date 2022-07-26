@@ -18,6 +18,7 @@ import jVMC
 import datetime
 import os
 import sys
+import time
 
 sys.path.append(os.path.abspath("./structures"))
 
@@ -86,7 +87,6 @@ for l in range(L):
                 ),
             )
         )
-        print(l, l_n)
     hamiltonian.add(jVMC.operator.scal_opstr(g, (jVMC.operator.Sx(l),)))
 
 
@@ -126,6 +126,10 @@ writer = SummaryWriter(
 # fitting loop
 for n in range(n_steps):
 
+    # time
+    start_processing_time = time.time()
+
+    # step
     dp, _ = stepper.step(
         0,
         tdvpEquation,
@@ -136,12 +140,16 @@ for n in range(n_steps):
     )
     psi.set_parameters(dp)
 
+    # time
+    processing_time = time.time() - start_processing_time
+
     # tensorboard logs
     print(
-        f"Step [{n:>5d}/{n_steps:>5d}] E/L: {(jax.numpy.real(tdvpEquation.ElocMean0) / L):>6f} Var(E)/L: {(tdvpEquation.ElocVar0 / L):>6f}"
+        f"Step [{n:>5d}/{n_steps:>5d}] E/L: {(jax.numpy.real(tdvpEquation.ElocMean0) / L):>6f} Var(E)/L: {(tdvpEquation.ElocVar0 / L):>6f} time: {processing_time:>2f}ms"
     )
     writer.add_scalar("E/L", float(jax.numpy.real(tdvpEquation.ElocMean0) / L), n)
     writer.add_scalar("Var(E)/L", float(tdvpEquation.ElocVar0 / L), n)
+    writer.add_scalar("time/ms", float(tdvpEquation.ElocVar0 / L), n)
 
 # close the writer
 writer.close()
