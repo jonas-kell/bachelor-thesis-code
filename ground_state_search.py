@@ -42,13 +42,13 @@ if not gpu_avail:
 
 lattice_shape = "linear"
 # lattice_shape = "cubic"
-# lattice_shape = "trigonal_square",
-# lattice_shape = "trigonal_diamond",
-# lattice_shape = "trigonal_hexagonal",
-# lattice_shape = "hexagonal",
+# lattice_shape = "trigonal_square"
+lattice_shape = "trigonal_diamond"
+# lattice_shape = "trigonal_hexagonal"
+# lattice_shape = "hexagonal"
 
 periodic = True
-size = 10
+size = 6
 
 (
     nr_lattice_sites,
@@ -58,6 +58,10 @@ size = 10
 
 L = nr_lattice_sites
 g = -0.7
+
+print(
+    f"We calculate the '{lattice_shape}' lattice of size {size} which means it has {L} lattice-sites. The boundary condition is {'periodic' if periodic else 'Non-periodic'}"
+)
 
 # Initialize net
 if gpu_avail:
