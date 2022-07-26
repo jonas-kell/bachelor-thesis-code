@@ -13,13 +13,12 @@ import jax.random as random
 import jax.numpy as jnp
 import flax.linen as nn
 
-import numpy as np
-import matplotlib.pyplot as plt
-
 import jVMC
 
-L = 10
-g = -0.7
+import datetime
+import os
+
+from torch.utils.tensorboard import SummaryWriter
 
 # Check whether GPU is available
 gpu_avail = jax.lib.xla_bridge.get_backend().platform == "gpu"
@@ -28,7 +27,13 @@ if gpu_avail:
     print("Running on GPU")
 
 if not gpu_avail:
-    print("Caution, running on CPU")
+    print("Running on CPU not supported")
+    exit()
+
+# Get lattice parameters
+
+L = 10
+g = -0.7
 
 # Initialize net
 if gpu_avail:
@@ -39,32 +44,13 @@ if gpu_avail:
     net = jVMC.nets.CNN(
         F=(L,), channels=(16,), strides=(1,), periodicBoundary=True, actFun=(myActFun,)
     )
-    n_steps = 20
+    n_steps = 1000
     n_Samples = 40000
-
-else:
-    net = jVMC.nets.CpxRBM(numHidden=8, bias=False)
-    n_steps = 300
-    n_Samples = 5000
 
 
 # Variational wave function
 psi = jVMC.vqs.NQS(net, seed=1234)
 
-
-def energy_single_p_mode(h_t, P):
-    return np.sqrt(1 + h_t**2 - 2 * h_t * np.cos(P))
-
-
-def ground_state_energy_per_site(h_t, N):
-    Ps = 0.5 * np.arange(-(N - 1), N - 1 + 2, 2)
-    Ps = Ps * 2 * np.pi / N
-    energies_p_modes = np.array([energy_single_p_mode(h_t, P) for P in Ps])
-    return -1 / N * np.sum(energies_p_modes)
-
-
-exact_energy = ground_state_energy_per_site(g, L)
-print(exact_energy)
 
 # Set up hamiltonian
 hamiltonian = jVMC.operator.BranchFreeOperator()
@@ -75,6 +61,7 @@ for l in range(L):
         )
     )
     hamiltonian.add(jVMC.operator.scal_opstr(g, (jVMC.operator.Sx(l),)))
+
 
 # Set up sampler
 sampler = jVMC.sampler.MCSampler(
@@ -93,9 +80,23 @@ tdvpEquation = jVMC.util.tdvp.TDVP(
     sampler, rhsPrefactor=1.0, svdTol=1e-8, diagonalShift=10, makeReal="real"
 )
 
-stepper = jVMC.util.stepper.Euler(timeStep=1e-2)  # ODE integrator
+# ODE integrator
+stepper = jVMC.util.stepper.Euler(timeStep=1e-2)
 
-res = []
+# Setup tensorboard Summary Writer
+flush_secs = 2
+
+tensorboard_folder_path = "/media/jonas/69B577D0C4C25263/MLData/tensorboard_jax/"
+run_date = datetime.datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
+run_name = "RANDOM_MODEL" + "_at_" + run_date
+tensorboard_folder = os.path.join(tensorboard_folder_path, run_name)
+
+writer = SummaryWriter(
+    tensorboard_folder,
+    flush_secs=flush_secs,
+)
+
+# fitting loop
 for n in range(n_steps):
 
     dp, _ = stepper.step(
@@ -108,21 +109,12 @@ for n in range(n_steps):
     )
     psi.set_parameters(dp)
 
-    print(n, jax.numpy.real(tdvpEquation.ElocMean0) / L, tdvpEquation.ElocVar0 / L)
-
-    res.append(
-        [n, jax.numpy.real(tdvpEquation.ElocMean0) / L, tdvpEquation.ElocVar0 / L]
+    # tensorboard logs
+    print(
+        f"Step [{n:>5d}/{n_steps:>5d}] E/L: {(jax.numpy.real(tdvpEquation.ElocMean0) / L):>6f} Var(E)/L: {(tdvpEquation.ElocVar0 / L):>6f}"
     )
+    writer.add_scalar("E/L", float(jax.numpy.real(tdvpEquation.ElocMean0) / L), n)
+    writer.add_scalar("Var(E)/L", float(tdvpEquation.ElocVar0 / L), n)
 
-res = np.array(res)
-
-fig, ax = plt.subplots(2, 1, sharex=True, figsize=[4.8, 4.8])
-ax[0].semilogy(res[:, 0], res[:, 1] - exact_energy, "-", label=r"$L=" + str(L) + "$")
-ax[0].set_ylabel(r"$(E-E_0)/L$")
-
-ax[1].semilogy(res[:, 0], res[:, 2], "-")
-ax[1].set_ylabel(r"Var$(E)/L$")
-ax[0].legend()
-plt.xlabel("iteration")
-plt.tight_layout()
-plt.savefig("gs_search.pdf")
+# close the writer
+writer.close()
