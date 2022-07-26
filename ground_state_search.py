@@ -20,6 +20,8 @@ import os
 import sys
 import time
 
+import numpy as np
+
 sys.path.append(os.path.abspath("./structures"))
 
 from torch.utils.tensorboard import SummaryWriter
@@ -76,17 +78,21 @@ psi = jVMC.vqs.NQS(net, seed=1234)
 
 # Set up hamiltonian
 hamiltonian = jVMC.operator.BranchFreeOperator()
+
+interaction_used = np.zeros((L, L), dtype=np.bool8)
 for l in range(L):
     for l_n in nn_interaction_indices[l]:
-        hamiltonian.add(
-            jVMC.operator.scal_opstr(
-                -0.5,  # TODO more efficient if only one direction is computed
-                (
-                    jVMC.operator.Sz(l),
-                    jVMC.operator.Sz(l_n),
-                ),
+        if not interaction_used[l, l_n]:
+            interaction_used[l_n, l] = interaction_used[l, l_n] = True
+            hamiltonian.add(
+                jVMC.operator.scal_opstr(
+                    -1,
+                    (
+                        jVMC.operator.Sz(l),
+                        jVMC.operator.Sz(l_n),
+                    ),
+                )
             )
-        )
     hamiltonian.add(jVMC.operator.scal_opstr(g, (jVMC.operator.Sx(l),)))
 
 
@@ -149,7 +155,7 @@ for n in range(n_steps):
     )
     writer.add_scalar("E/L", float(jax.numpy.real(tdvpEquation.ElocMean0) / L), n)
     writer.add_scalar("Var(E)/L", float(tdvpEquation.ElocVar0 / L), n)
-    writer.add_scalar("time/ms", float(tdvpEquation.ElocVar0 / L), n)
+    writer.add_scalar("time/ms", float(processing_time), n)
 
 # close the writer
 writer.close()
