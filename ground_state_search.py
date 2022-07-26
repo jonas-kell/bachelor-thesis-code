@@ -151,11 +151,11 @@ for n in range(n_steps):
 
     # tensorboard logs
     print(
-        f"Step [{n:>5d}/{n_steps:>5d}] E/L: {(jax.numpy.real(tdvpEquation.ElocMean0) / L):>6f} Var(E)/L: {(tdvpEquation.ElocVar0 / L):>6f} time: {processing_time:>2f}ms"
+        f"Step [{n:>5d}/{n_steps:>5d}] E/L: {(jax.numpy.real(tdvpEquation.ElocMean0) / L):>6f} Var(E)/L: {(tdvpEquation.ElocVar0 / L):>6f} time: {processing_time:>2f}s"
     )
     writer.add_scalar("E/L", float(jax.numpy.real(tdvpEquation.ElocMean0) / L), n)
     writer.add_scalar("Var(E)/L", float(tdvpEquation.ElocVar0 / L), n)
-    writer.add_scalar("time/ms", float(processing_time), n)
+    writer.add_scalar("time/s", float(processing_time), n)
 
 # close the writer
 writer.close()
