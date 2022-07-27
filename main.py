@@ -3,10 +3,16 @@ from jax.config import config
 
 # 64 bit processing
 config.update("jax_enable_x64", True)
+
 disable_jit = False
 config.update("jax_disable_jit", disable_jit)
 if disable_jit:
     print("CAUTION. JIT-Compilation is deactivated for debugging purposes")
+
+debug_nans = False
+if debug_nans:
+    print("CAUTION. Debug NANs is activated for debugging purposes")
+config.update("jax_debug_nans", debug_nans)
 
 # Check whether GPU is available
 gpu_avail = jax.lib.xla_bridge.get_backend().platform == "gpu"
@@ -96,6 +102,11 @@ if __name__ == "__main__":
         "lattice_periodic": True,
         "model_name": "MB",
     }
+
+    # TODO remove overwrite
+    parameters["n_steps"] = 10
+    parameters["n_samples"] = 50
+    parameters["lattice_size"] = 16
 
     additional_parameter_strings = [] if len(sys.argv) < 2 else sys.argv[1:]
 

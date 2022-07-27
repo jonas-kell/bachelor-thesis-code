@@ -135,6 +135,7 @@ def execute_ground_state_search(
             psi=psi,
             numSamples=None,
         )
+        # print(psi.params) # Debug if network parameters get backpropagated
         psi.set_parameters(dp)
 
         # time

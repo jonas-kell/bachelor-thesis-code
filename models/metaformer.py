@@ -11,6 +11,8 @@ from typing import Literal
 
 from structures.lattice_parameter_resolver import LatticeParameters
 
+from jax.experimental.host_callback import id_print
+
 
 class SiteEmbed(nn.Module):
     """Transforms the input of "sites x 0/1-spin-states" to a numeric array of size "sites x embed_dim"
@@ -27,7 +29,9 @@ class SiteEmbed(nn.Module):
         "duplicate_spread", "duplicate_nn", "duplicate_nnn"
     ] = "duplicate_spread"
 
-    @nn.compact
+    def setup(self):
+        self.dense_layer = nn.Dense(self.embed_dim)
+
     def __call__(self, x):
         # Go from 0/1 representation to 1/-1 (needed, because 0 represents no interaction in 'duplicate_...')
         x = 2 * x - 1
@@ -54,8 +58,7 @@ class SiteEmbed(nn.Module):
 
         # normally done with a Convolution in one step, but here: 1. spread info   2. encode through one Dense layer
         # sites x ?? -> sites x embed_dim
-        dense_layer = nn.Dense(self.embed_dim)
-        x = dense_layer(x)
+        x = self.dense_layer(x)
 
         return x
 
@@ -79,15 +82,17 @@ class Metaformer(nn.Module):
         "duplicate_spread", "duplicate_nn", "duplicate_nnn"
     ] = "duplicate_spread"
 
-    @nn.compact
-    def __call__(self, x):
-        x = SiteEmbed(
+    def setup(self):
+        self.site_embed = SiteEmbed(
             embed_dim=self.embed_dim,
             lattice_parameters=self.lattice_parameters,
             embed_mode=self.embed_mode,
-        )(x)
+        )
 
-        x = nn.Dense(self.lattice_parameters["nr_sites"])(x)
+    def __call__(self, x):
+        x = self.site_embed(x)
+
+        x = jnp.sum(x)  # TODO temporary, avoid nans in later calculations
 
         # activation functions to convert to scalar energy output
         return jnp.sum(act_funs.log_cosh(x))
