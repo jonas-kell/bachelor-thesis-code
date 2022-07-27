@@ -25,7 +25,8 @@ sys.path.append(os.path.abspath("./computation"))
 from computation.ground_state_search import execute_ground_state_search
 
 sys.path.append(os.path.abspath("./models"))
-from models.preconfigured import cnn
+from models.preconfigured import cnn, complexRBM
+from models.metaformer import metaformer_base
 
 # local folder constants
 tensorboard_folder_path = "/media/jonas/69B577D0C4C25263/MLData/tensorboard_jax/"
@@ -34,16 +35,20 @@ tensorboard_folder_path = "/media/jonas/69B577D0C4C25263/MLData/tensorboard_jax/
 # add custom configurations in this dict
 available_models = {
     "CNN": lambda lattice_parameters: cnn(lattice_parameters["nr_sites"]),
+    "RBM": lambda lattice_parameters: complexRBM(),
+    "MB": lambda lattice_parameters: metaformer_base(
+        lattice_parameters=lattice_parameters
+    ),
 }
 
 
 def execute_computation(
     n_steps: int,
     n_samples: int,
-    lattice_shape: int,
+    lattice_shape: str,
     lattice_size: int,
-    lattice_periodic: int,
-    model_name: int,
+    lattice_periodic: bool,
+    model_name: str,
     hamiltonian_J_parameter=-1.0,
     hamiltonian_h_parameter=-0.7,
 ):
@@ -51,7 +56,6 @@ def execute_computation(
         shape=lattice_shape, size=lattice_size, periodic=lattice_periodic
     )
 
-    model_name = "CNN"
     if model_name in available_models:
         model = available_models[model_name](lattice_parameters)
 
@@ -82,9 +86,9 @@ if __name__ == "__main__":
         "n_steps": 1000,
         "n_samples": 40000,
         "lattice_shape": "linear",
-        "lattice_size": 3,
+        "lattice_size": 15,
         "lattice_periodic": True,
-        "model_name": "CNN",
+        "model_name": "MB",
     }
 
     additional_parameter_strings = [] if len(sys.argv) < 2 else sys.argv[1:]
