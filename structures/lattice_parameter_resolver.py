@@ -1,7 +1,7 @@
 from typing import Literal
 from typing import TypedDict
 
-from neighbors import (
+from .neighbors import (
     linear_lattice_get_nn_indices,
     linear_lattice_get_nnn_indices,
     linear_nr_lattice_sites,
