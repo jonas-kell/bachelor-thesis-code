@@ -22,6 +22,9 @@ from .neighbors import (
     hexagonal_nr_lattice_sites,
 )
 
+import jax.numpy as jnp
+import numpy as np
+
 
 class LatticeParameters(TypedDict):
     nr_sites: int
@@ -30,6 +33,8 @@ class LatticeParameters(TypedDict):
     shape_name: str
     size: int
     periodic: bool
+    nn_spread_matrix: jnp.ndarray
+    nnn_spread_matrix: jnp.ndarray
 
 
 def resolve_lattice_parameters(
@@ -95,6 +100,8 @@ def resolve_lattice_parameters(
         [nnn_function(i, n, periodic_bounds=periodic) for i in range(nr_lattice_sites)]
     )
 
+    self_interaction_indices = list([list([i]) for i in range(nr_lattice_sites)])
+
     lattice_parameters = LatticeParameters(
         nr_sites=nr_lattice_sites,
         nn_interaction_indices=nn_interaction_indices,
@@ -102,10 +109,53 @@ def resolve_lattice_parameters(
         shape_name=shape,
         size=size,
         periodic=periodic,
+        nn_spread_matrix=jax_spread_matrices(
+            self_interaction_indices, nn_interaction_indices
+        ),
+        nnn_spread_matrix=jax_spread_matrices(
+            self_interaction_indices, nn_interaction_indices, nnn_interaction_indices
+        ),
     )
 
     return lattice_parameters
 
 
+# generates a jnp.ndarray to be used with einsum in order to spread the values like needed in metaformer.SiteEmbed
+def jax_spread_matrices(*args) -> jnp.ndarray:
+    # assert list structure, cache necessary lengths,
+    lengths = []
+    inner_lengths = []
+    for arg in args:
+        assert type(arg) == list
+        lengths.append(len(arg))
+
+        index = len(inner_lengths)
+        inner_lengths.append(0)
+        for inner_list in arg:
+            assert type(inner_list) == list
+            if inner_lengths[index] < len(inner_list):
+                inner_lengths[index] = len(inner_list)
+
+    assert min(lengths) == max(lengths)
+    nr_sites = min(lengths)
+
+    # fill output tensor
+    output = np.zeros((sum(inner_lengths), min(lengths), min(lengths)))
+
+    index = 0
+    for arg_index, arg in enumerate(args):
+        for list_index in range(inner_lengths[arg_index]):
+            for site in range(nr_sites):
+                lst = arg[site]
+                if list_index < len(lst):
+                    output[index, site, lst[list_index]] += 1
+
+            index += 1
+
+    output = jnp.array(output)
+
+    return output
+
+
 if __name__ == "__main__":
-    print(resolve_lattice_parameters(1, "hexagonal", False))
+    print(resolve_lattice_parameters(3, "linear", False)["nnn_spread_matrix"])

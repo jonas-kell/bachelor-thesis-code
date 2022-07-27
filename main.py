@@ -3,6 +3,10 @@ from jax.config import config
 
 # 64 bit processing
 config.update("jax_enable_x64", True)
+disable_jit = False
+config.update("jax_disable_jit", disable_jit)
+if disable_jit:
+    print("CAUTION. JIT-Compilation is deactivated for debugging purposes")
 
 # Check whether GPU is available
 gpu_avail = jax.lib.xla_bridge.get_backend().platform == "gpu"
@@ -26,7 +30,7 @@ from computation.ground_state_search import execute_ground_state_search
 
 sys.path.append(os.path.abspath("./models"))
 from models.preconfigured import cnn, complexRBM
-from models.metaformer import metaformer_base
+from models.metaformer import Metaformer
 
 # local folder constants
 tensorboard_folder_path = "/media/jonas/69B577D0C4C25263/MLData/tensorboard_jax/"
@@ -36,8 +40,10 @@ tensorboard_folder_path = "/media/jonas/69B577D0C4C25263/MLData/tensorboard_jax/
 available_models = {
     "CNN": lambda lattice_parameters: cnn(lattice_parameters["nr_sites"]),
     "RBM": lambda lattice_parameters: complexRBM(),
-    "MB": lambda lattice_parameters: metaformer_base(
-        lattice_parameters=lattice_parameters
+    "MB": lambda lattice_parameters: Metaformer(
+        lattice_parameters=lattice_parameters,
+        embed_dim=5,
+        embed_mode="duplicate_nnn",
     ),
 }
 
