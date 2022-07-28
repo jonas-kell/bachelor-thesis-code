@@ -1,7 +1,8 @@
 from typing import Literal
 from typing import TypedDict
+from jax.lax import stop_gradient
 
-from .neighbors import (
+from helpers.neighbors import (
     linear_lattice_get_nn_indices,
     linear_lattice_get_nnn_indices,
     linear_nr_lattice_sites,
@@ -100,7 +101,7 @@ def resolve_lattice_parameters(
         [nnn_function(i, n, periodic_bounds=periodic) for i in range(nr_lattice_sites)]
     )
 
-    self_interaction_indices = list([list([i]) for i in range(nr_lattice_sites)])
+    self_interaction_indices = self_interaction_indices(nr_lattice_sites)
 
     lattice_parameters = LatticeParameters(
         nr_sites=nr_lattice_sites,
@@ -109,11 +110,15 @@ def resolve_lattice_parameters(
         shape_name=shape,
         size=size,
         periodic=periodic,
-        nn_spread_matrix=jax_spread_matrices(
-            self_interaction_indices, nn_interaction_indices
+        nn_spread_matrix=stop_gradient(
+            jax_spread_matrices(self_interaction_indices, nn_interaction_indices)
         ),
-        nnn_spread_matrix=jax_spread_matrices(
-            self_interaction_indices, nn_interaction_indices, nnn_interaction_indices
+        nnn_spread_matrix=stop_gradient(
+            jax_spread_matrices(
+                self_interaction_indices,
+                nn_interaction_indices,
+                nnn_interaction_indices,
+            )
         ),
     )
 
@@ -155,6 +160,10 @@ def jax_spread_matrices(*args) -> jnp.ndarray:
     output = jnp.array(output)
 
     return output
+
+
+def self_interaction_indices(n):
+    return list([list([i]) for i in range(n)])
 
 
 if __name__ == "__main__":

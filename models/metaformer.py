@@ -1,7 +1,6 @@
 from jax.config import config
 
 config.update("jax_enable_x64", True)
-from jax.lax import stop_gradient
 import jax.numpy as jnp
 import flax
 import flax.linen as nn
@@ -43,14 +42,14 @@ class SiteEmbed(nn.Module):
             # sites x 1 -> sites x (1 + #nn)
             x = jnp.einsum(
                 "ijk,k->ji",
-                stop_gradient(self.lattice_parameters["nn_spread_matrix"]),
+                self.lattice_parameters["nn_spread_matrix"],
                 x,
             )
         elif self.embed_mode == "duplicate_nnn":
             # sites x 1 -> sites x (1 + #nn + #nnn)
             x = jnp.einsum(
                 "ijk,k->ji",
-                stop_gradient(self.lattice_parameters["nnn_spread_matrix"]),
+                self.lattice_parameters["nnn_spread_matrix"],
                 x,
             )
         else:

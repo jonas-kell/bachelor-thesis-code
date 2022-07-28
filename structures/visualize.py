@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import math
 
-from neighbors import (
+from helpers.neighbors import (
     linear_lattice_get_nn_indices,
     linear_lattice_get_nnn_indices,
     cubic_lattice_get_nn_indices,
