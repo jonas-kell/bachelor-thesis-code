@@ -30,6 +30,7 @@ class Attention(nn.Module):
         * ``mixing_symmetry``: To decide which graph mode to use for graph-attention
     """
 
+    lattice_parameters: LatticeParameters
     embed_dim: int = 15
     num_heads: int = 3
     qkv_bias: bool = True
@@ -46,12 +47,12 @@ class Attention(nn.Module):
         self.proj = nn.Dense(self.embed_dim, use_bias=True)
 
         self.graph_projection = (
-            Identity()  # arbitrary lets this behave as a VT, not a GVT
-            # if mixing_symmetry == "arbitrary"
-            # else GraphMaskAttention(
-            #     size=patch_nr_side_length,
-            #     graph_layer=mixing_symmetry,
-            # )
+            Identity()  # arbitrary lets this behave as a Transformer, not a Graph-Transformer
+            if self.mixing_symmetry == "arbitrary"
+            else GraphMaskAttention(
+                lattice_parameters=self.lattice_parameters,
+                graph_layer=self.mixing_symmetry,
+            )
         )
 
     def __call__(self, x):
@@ -74,6 +75,40 @@ class Attention(nn.Module):
         x = (attn @ v).transpose(0, 2, 1).reshape(N, C)
 
         x = self.proj(x)
+
+        return x
+
+
+class GraphMaskAttention(nn.Module):
+    """Graph-Mask implementation that is compatible with the Attention Module"""
+
+    lattice_parameters: LatticeParameters
+    graph_layer: Literal["symm_nn", "symm_nnn"] = "symm_nn"
+
+    def setup(self):
+        self.factors = self.param("factors", nn.initializers.normal(), (3,))
+
+    def __call__(self, x):
+        matrix = (
+            self.factors[0]
+            * self.lattice_parameters["adjacency_matrices"]["add_self_matrix"]
+        )
+
+        if self.graph_layer in ["symm_nn", "symm_nnn"]:
+            matrix += (
+                self.factors[1]
+                * self.lattice_parameters["adjacency_matrices"]["add_nn_matrix"]
+            )
+
+        if self.graph_layer == "symm_nnn":
+            matrix += (
+                self.factors[2]
+                * self.lattice_parameters["adjacency_matrices"]["add_nnn_matrix"]
+            )
+
+        x = self.lattice_parameters["adjacency_matrices"]["zero_to_neg_inf_function"](
+            jnp.einsum("ij,hij->hij", matrix, x)
+        )
 
         return x
 

@@ -20,15 +20,21 @@ embed_dim = 8 * 2
 nr_patches = 15
 
 lattice_parameters = resolve_lattice_parameters(
-    shape="linear", size=nr_patches, periodic=False
+    shape="linear", size=nr_patches, periodic=True
 )
 
 model = Attention(
-    embed_dim=embed_dim, num_heads=8, qkv_bias=True, mixing_symmetry="arbitrary"
+    lattice_parameters=lattice_parameters,
+    embed_dim=embed_dim,
+    num_heads=8,
+    qkv_bias=True,
+    mixing_symmetry="symm_nnn",
 )
 
 x = jnp.ones((nr_patches, embed_dim))
 
 params = model.init(random.PRNGKey(0), x)
+
+print("here")
 
 print(model.apply(params, x).shape)

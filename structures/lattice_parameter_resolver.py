@@ -32,8 +32,10 @@ import numpy as np
 
 
 class AdjacencyMatrices(TypedDict):
+    add_self_matrix: jnp.ndarray
     add_nn_matrix: jnp.ndarray
     add_nnn_matrix: jnp.ndarray
+    avg_self_matrix: jnp.ndarray
     avg_nn_matrix: jnp.ndarray
     avg_nnn_matrix: jnp.ndarray
     zero_to_neg_inf_function: Callable[[jnp.ndarray], jnp.ndarray]
@@ -134,6 +136,11 @@ def resolve_lattice_parameters(
             )
         ),
         adjacency_matrices=AdjacencyMatrices(
+            add_self_matrix=stop_gradient(
+                get_jax_adjacency_matrix(
+                    list_representation=self_interaction_indices, type="sum"
+                )
+            ),
             add_nn_matrix=stop_gradient(
                 get_jax_adjacency_matrix(
                     list_representation=nn_interaction_indices, type="sum"
@@ -142,6 +149,11 @@ def resolve_lattice_parameters(
             add_nnn_matrix=stop_gradient(
                 get_jax_adjacency_matrix(
                     list_representation=nnn_interaction_indices, type="sum"
+                )
+            ),
+            avg_self_matrix=stop_gradient(
+                get_jax_adjacency_matrix(
+                    list_representation=self_interaction_indices, type="avg+1"
                 )
             ),
             avg_nn_matrix=stop_gradient(
