@@ -12,7 +12,7 @@ import jax.random as random
 sys.path.append(os.path.abspath("./../"))
 sys.path.append(os.path.abspath("./../models"))
 sys.path.append(os.path.abspath("./../structures"))
-from models.metaformer import Attention
+from models.metaformer import Attention, AveragingConvolutionHead
 from structures.lattice_parameter_resolver import resolve_lattice_parameters
 
 
@@ -23,6 +23,11 @@ lattice_parameters = resolve_lattice_parameters(
     shape="linear", size=nr_patches, periodic=True
 )
 
+
+# Test Attention
+
+x = jnp.ones((nr_patches, embed_dim))
+print("x shape: ", x.shape)
 model = Attention(
     lattice_parameters=lattice_parameters,
     embed_dim=embed_dim,
@@ -30,11 +35,18 @@ model = Attention(
     qkv_bias=True,
     mixing_symmetry="symm_nnn",
 )
+params = model.init(random.PRNGKey(0), x)
+print(model.apply(params, x).shape)
 
-x = jnp.ones((nr_patches, embed_dim))
 
+# Test Averaging Convolution Head
+
+x = jnp.array(range(nr_patches * embed_dim)).reshape((nr_patches, embed_dim))
+print("x: ", x)
+print("x shape: ", x.shape)
+
+model = AveragingConvolutionHead()
 params = model.init(random.PRNGKey(0), x)
 
-print("here")
-
+print(model.apply(params, x))
 print(model.apply(params, x).shape)

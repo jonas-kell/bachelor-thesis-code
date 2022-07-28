@@ -20,6 +20,36 @@ class Identity(nn.Module):
         return x
 
 
+class AveragingConvolutionHead(nn.Module):
+    @nn.compact
+    def __call__(self, x):
+        N, D = x.shape
+
+        # average pooling to get from N,D -> 1,D -> D
+        x = nn.avg_pool(x, window_shape=(N,))
+        x = jnp.squeeze(x)
+
+        return x
+
+
+class Mlp(nn.Module):
+    """Two layer MLP. Normally used for dims: I -> H -> I, where I=out_features and H=hidden_features"""
+
+    hidden_features: int
+    out_features: int
+    act_layer = nn.gelu
+
+    def setup(self):
+        self.fc1 = nn.Dense(self.hidden_features)
+        self.fc2 = nn.Dense(self.out_features)
+
+    def __call__(self, x):
+        x = self.fc1(x)
+        x = self.act_layer(x)
+        x = self.fc2(x)
+        return x
+
+
 class Attention(nn.Module):
     """Default attention module of a Transformer
 
