@@ -146,9 +146,9 @@ class GraphMaskAttention(nn.Module):
 class Block(nn.Module):
     embed_dim: int
     token_mixer: nn.Module
-    mlp_ratio = 4.0
-    act_layer = nn.gelu
-    norm_layer = nn.normalization.LayerNorm
+    mlp_ratio: float = 4.0
+    act_layer: Callable = nn.gelu
+    norm_layer: nn.Module = nn.normalization.LayerNorm
 
     def setup(self):
         self.norm1 = self.norm_layer
@@ -179,12 +179,11 @@ class TokenMixer(nn.Module):
     lattice_parameters: LatticeParameters
     # structure info
     embed_dim: int
-    num_sites: int
     # token mixing
     token_mixer: Literal[
         "attention",
         "pooling",
-        "graph-convolution",
+        "convolution",
     ] = "attention"
     mixing_symmetry: Literal["arbitrary", "symm_nn", "symm_nnn"] = "arbitrary"
     # attention specific arguments
@@ -214,10 +213,10 @@ class TokenMixer(nn.Module):
         #         )
 
         # # ! graph convolution
-        # elif self.token_mixer == "graph-convolution":
+        # elif self.token_mixer == "convolution":
         #     if self.mixing_symmetry not in ["symm_nn", "symm_nnn"]:
         #         raise RuntimeError(
-        #             f"Mixing symmetry modifier {self.mixing_symmetry} not supported for graph-convolution"
+        #             f"Mixing symmetry modifier {self.mixing_symmetry} not supported for convolution"
         #         )
         #     self.token_mixer = GraphMaskConvolution(
         #         graph_layer=self.mixing_symmetry,
@@ -300,18 +299,64 @@ class Metaformer(nn.Module):
     embed_mode: Literal[
         "duplicate_spread", "duplicate_nn", "duplicate_nnn"
     ] = "duplicate_spread"
+    depth: int = 12
+    mlp_ratio: float = 4.0
+    norm_layer: nn.Module = nn.normalization.LayerNorm
+    act_layer: Callable = nn.gelu
+    # token mixing
+    token_mixer: Literal[
+        "attention",
+        "pooling",
+        "convolution",
+    ] = "attention"
+    mixing_symmetry: Literal["arbitrary", "symm_nn", "symm_nnn"] = "arbitrary"
+    # attention specific arguments
+    num_heads: int = 3
+    qkv_bias: bool = True
 
     def setup(self):
+        # Embed input into Metaformer-space
         self.site_embed = SiteEmbed(
             embed_dim=self.embed_dim,
             lattice_parameters=self.lattice_parameters,
             embed_mode=self.embed_mode,
         )
 
+        # Blocks
+        self.blocks = nn.ModuleList(
+            [
+                Block(
+                    embed_dim=self.embed_dim,
+                    token_mixer=TokenMixer(
+                        lattice_parameters=self.lattice_parameters,
+                        embed_dim=self.embed_dim,
+                        mixing_symmetry=self.mixing_symmetry,
+                        num_heads=self.num_heads,
+                        qkv_bias=self.qkv_bias,
+                    ),
+                    mlp_ratio=self.mlp_ratio,
+                    act_layer=self.act_layer,
+                    norm_layer=self.norm_layer,
+                )
+                for i in range(self.depth)
+            ]
+        )
+
+        # Norm
+        self.norm = self.norm_layer
+
+        # Pooling-dimension-reducing-head
+        self.head = AveragingConvolutionHead()
+
     def __call__(self, x):
         x = self.site_embed(x)
 
-        x = jnp.sum(x)  # TODO temporary, avoid nans in later calculations
+        for blk in self.blocks:
+            x = blk(x)
+
+        x = self.norm(x)
+
+        x = self.head(x)
 
         # activation functions to convert to scalar energy output
         return jnp.sum(act_funs.log_cosh(x))
@@ -320,3 +365,33 @@ class Metaformer(nn.Module):
     # this could cause problems if more than one instance of an unhashable modlue is used. But here it should be fine for now
     def __hash__(self):
         return id(self)
+
+
+def transformer(lattice_parameters: LatticeParameters, **kwargs):
+    return Metaformer(
+        lattice_parameters=lattice_parameters,
+        embed_mode="duplicate_spread",
+        mixing_symmetry="arbitrary",
+        token_mixer="attention",
+        **kwargs,
+    )
+
+
+def graph_transformer_nn(lattice_parameters: LatticeParameters, **kwargs):
+    return Metaformer(
+        lattice_parameters=lattice_parameters,
+        embed_mode="duplicate_nn",
+        mixing_symmetry="symm_nn",
+        token_mixer="attention",
+        **kwargs,
+    )
+
+
+def graph_transformer_nnn(lattice_parameters: LatticeParameters, **kwargs):
+    return Metaformer(
+        lattice_parameters=lattice_parameters,
+        embed_mode="duplicate_nnn",
+        mixing_symmetry="symm_nnn",
+        token_mixer="attention",
+        **kwargs,
+    )

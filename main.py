@@ -36,7 +36,11 @@ from computation.ground_state_search import execute_ground_state_search
 
 sys.path.append(os.path.abspath("./models"))
 from models.preconfigured import cnn, complexRBM
-from models.metaformer import Metaformer
+from models.metaformer import (
+    transformer,
+    graph_transformer_nn,
+    graph_transformer_nnn,
+)
 
 # local folder constants
 tensorboard_folder_path = "/media/jonas/69B577D0C4C25263/MLData/tensorboard_jax/"
@@ -46,10 +50,12 @@ tensorboard_folder_path = "/media/jonas/69B577D0C4C25263/MLData/tensorboard_jax/
 available_models = {
     "CNN": lambda lattice_parameters: cnn(lattice_parameters["nr_sites"]),
     "RBM": lambda lattice_parameters: complexRBM(),
-    "MB": lambda lattice_parameters: Metaformer(
-        lattice_parameters=lattice_parameters,
-        embed_dim=5,
-        embed_mode="duplicate_nnn",
+    "TF": lambda lattice_parameters: transformer(lattice_parameters=lattice_parameters),
+    "GF-NN": lambda lattice_parameters: graph_transformer_nn(
+        lattice_parameters=lattice_parameters
+    ),
+    "GF-NNN": lambda lattice_parameters: graph_transformer_nnn(
+        lattice_parameters=lattice_parameters
     ),
 }
 
@@ -98,15 +104,10 @@ if __name__ == "__main__":
         "n_steps": 1000,
         "n_samples": 40000,
         "lattice_shape": "linear",
-        "lattice_size": 15,
+        "lattice_size": 25,
         "lattice_periodic": True,
-        "model_name": "MB",
+        "model_name": "CNN",
     }
-
-    # TODO remove overwrite
-    parameters["n_steps"] = 10
-    parameters["n_samples"] = 50
-    parameters["lattice_size"] = 16
 
     additional_parameter_strings = [] if len(sys.argv) < 2 else sys.argv[1:]
 
