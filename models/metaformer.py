@@ -153,7 +153,8 @@ class Block(nn.Module):
     def setup(self):
         mlp_hidden_dim = int(self.embed_dim * self.mlp_ratio)
 
-        self.norm = self.norm_layer()
+        self.norm1 = self.norm_layer()
+        self.norm2 = self.norm_layer()
         self.mlp = Mlp(
             hidden_features=mlp_hidden_dim,
             out_features=self.embed_dim,
@@ -161,11 +162,11 @@ class Block(nn.Module):
         )
 
     def __call__(self, x):
-        y = self.norm(x)
+        y = self.norm1(x)
         y = self.token_mixer(y)
         x = x + y
 
-        z = self.norm(x)
+        z = self.norm2(x)
         z = self.mlp(z)
         x = x + z
 
