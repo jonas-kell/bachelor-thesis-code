@@ -67,8 +67,10 @@ def execute_computation(
     lattice_size: int,
     lattice_periodic: bool,
     model_name: str,
-    hamiltonian_J_parameter=-1.0,
-    hamiltonian_h_parameter=-0.7,
+    hamiltonian_J_parameter: float = -1.0,
+    hamiltonian_h_parameter: float = -0.7,
+    num_chains: int = 100,
+    thermalization_sweeps: int = 25,
 ):
     lattice_parameters = resolve_lattice_parameters(
         shape=lattice_shape, size=lattice_size, periodic=lattice_periodic
@@ -86,6 +88,8 @@ def execute_computation(
         tensorboard_folder_path=tensorboard_folder_path,
         hamiltonian_J_parameter=hamiltonian_J_parameter,
         hamiltonian_h_parameter=hamiltonian_h_parameter,
+        num_chains=num_chains,
+        thermalization_sweeps=thermalization_sweeps,
     )
 
 
@@ -107,6 +111,10 @@ if __name__ == "__main__":
         "lattice_size": 25,
         "lattice_periodic": True,
         "model_name": "CNN",
+        "hamiltonian_J_parameter": -1.0,
+        "hamiltonian_h_parameter": -0.7,
+        "num_chains": 100,
+        "thermalization_sweeps": 25,
     }
 
     additional_parameter_strings = [] if len(sys.argv) < 2 else sys.argv[1:]
