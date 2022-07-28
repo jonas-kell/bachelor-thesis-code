@@ -6,7 +6,7 @@ import flax
 import flax.linen as nn
 import jVMC.nets.activation_functions as act_funs
 
-from typing import Literal
+from typing import Callable, Literal, Callable
 
 from structures.lattice_parameter_resolver import LatticeParameters
 
@@ -37,7 +37,7 @@ class Mlp(nn.Module):
 
     hidden_features: int
     out_features: int
-    act_layer = nn.gelu
+    act_layer: Callable = nn.gelu
 
     def setup(self):
         self.fc1 = nn.Dense(self.hidden_features)
@@ -141,6 +141,96 @@ class GraphMaskAttention(nn.Module):
         )
 
         return x
+
+
+class Block(nn.Module):
+    embed_dim: int
+    token_mixer: nn.Module
+    mlp_ratio = 4.0
+    act_layer = nn.gelu
+    norm_layer = nn.normalization.LayerNorm
+
+    def setup(self):
+        self.norm1 = self.norm_layer
+        self.token_mixer = self.token_mixer
+        self.norm2 = self.norm_layer
+
+        mlp_hidden_dim = int(self.embed_dim * self.mlp_ratio)
+
+        self.mlp = Mlp(
+            hidden_features=mlp_hidden_dim,
+            out_features=self.embed_dim,
+            act_layer=self.act_layer,
+        )
+
+    def __call__(self, x):
+        y = self.norm1(x)
+        y = self.token_mixer(y)
+        x = x + y
+
+        z = self.norm2(x)
+        z = self.mlp(z)
+        x = x + z
+
+        return x
+
+
+class TokenMixer(nn.Module):
+    lattice_parameters: LatticeParameters
+    # structure info
+    embed_dim: int
+    num_sites: int
+    # token mixing
+    token_mixer: Literal[
+        "attention",
+        "pooling",
+        "graph-convolution",
+    ] = "attention"
+    mixing_symmetry: Literal["arbitrary", "symm_nn", "symm_nnn"] = "arbitrary"
+    # attention specific arguments
+    num_heads: int = 3
+    qkv_bias: bool = True
+
+    def setup(self):
+        # ! attention
+        if self.token_mixer == "attention":
+            self.token_mixer = Attention(
+                lattice_parameters=self.lattice_parameters,
+                embed_dim=self.embed_dim,
+                num_heads=self.num_heads,
+                qkv_bias=self.qkv_bias,
+                mixing_symmetry=self.mixing_symmetry,
+            )
+
+        # # ! pooling
+        # elif self.token_mixer == "pooling":
+        #     if self.mixing_symmetry in ["symm_nn", "symm_nnn"]:
+        #         self.token_mixer = GraphMaskPooling(
+        #             graph_layer=self.mixing_symmetry,
+        #         )
+        #     else:
+        #         raise RuntimeError(
+        #             f"Mixing symmetry modifier {self.mixing_symmetry} not supported for Pooling token mixer"
+        #         )
+
+        # # ! graph convolution
+        # elif self.token_mixer == "graph-convolution":
+        #     if self.mixing_symmetry not in ["symm_nn", "symm_nnn"]:
+        #         raise RuntimeError(
+        #             f"Mixing symmetry modifier {self.mixing_symmetry} not supported for graph-convolution"
+        #         )
+        #     self.token_mixer = GraphMaskConvolution(
+        #         graph_layer=self.mixing_symmetry,
+        #         embed_dim=self.embed_dim,
+        #     )
+
+        else:
+            raise RuntimeError(
+                f"Token mixing operation {self.token_mixer} not implemented"
+            )
+
+    def __call__(self, x):
+        return self.token_mixer(x)
 
 
 class SiteEmbed(nn.Module):
