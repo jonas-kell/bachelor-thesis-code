@@ -1,7 +1,6 @@
 import jax.numpy as jnp
 import numpy as np
 from typing import Literal
-from jax.lax import stop_gradient
 
 
 def transform_jax_zero_matrix_to_neg_infinity(matrix: jnp.ndarray) -> jnp.ndarray:
@@ -22,7 +21,7 @@ def get_jax_adjacency_matrix(
     if type == "avg+1":
         result = get_averaging_matrix(matrix, count_own_connection=True)
 
-    return stop_gradient(jnp.array(result, dtype=np.float32))
+    return jnp.array(result, dtype=np.float32)
 
 
 # !! if the matrix has an empty row (unconnected node) in "avg" mode it throws an nan/inf error because of division by 0. Better use "avg+1" to be save

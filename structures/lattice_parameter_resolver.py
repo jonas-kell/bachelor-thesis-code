@@ -1,5 +1,4 @@
-from typing import Literal
-from typing import TypedDict
+from typing import Literal, TypedDict, Callable
 from jax.lax import stop_gradient
 
 from helpers.neighbors import (
@@ -23,8 +22,21 @@ from helpers.neighbors import (
     hexagonal_nr_lattice_sites,
 )
 
+from helpers.adjacency_matrix import (
+    get_jax_adjacency_matrix,
+    transform_jax_zero_matrix_to_neg_infinity,
+)
+
 import jax.numpy as jnp
 import numpy as np
+
+
+class AdjacencyMatrices(TypedDict):
+    add_nn_matrix: jnp.ndarray
+    add_nnn_matrix: jnp.ndarray
+    avg_nn_matrix: jnp.ndarray
+    avg_nnn_matrix: jnp.ndarray
+    zero_to_neg_inf_function: Callable[[jnp.ndarray], jnp.ndarray]
 
 
 class LatticeParameters(TypedDict):
@@ -36,6 +48,7 @@ class LatticeParameters(TypedDict):
     periodic: bool
     nn_spread_matrix: jnp.ndarray
     nnn_spread_matrix: jnp.ndarray
+    adjacency_matrices: AdjacencyMatrices
 
 
 def resolve_lattice_parameters(
@@ -101,7 +114,7 @@ def resolve_lattice_parameters(
         [nnn_function(i, n, periodic_bounds=periodic) for i in range(nr_lattice_sites)]
     )
 
-    self_interaction_indices = self_interaction_indices(nr_lattice_sites)
+    self_interaction_indices = get_self_interaction_indices(nr_lattice_sites)
 
     lattice_parameters = LatticeParameters(
         nr_sites=nr_lattice_sites,
@@ -119,6 +132,29 @@ def resolve_lattice_parameters(
                 nn_interaction_indices,
                 nnn_interaction_indices,
             )
+        ),
+        adjacency_matrices=AdjacencyMatrices(
+            add_nn_matrix=stop_gradient(
+                get_jax_adjacency_matrix(
+                    list_representation=nn_interaction_indices, type="sum"
+                )
+            ),
+            add_nnn_matrix=stop_gradient(
+                get_jax_adjacency_matrix(
+                    list_representation=nnn_interaction_indices, type="sum"
+                )
+            ),
+            avg_nn_matrix=stop_gradient(
+                get_jax_adjacency_matrix(
+                    list_representation=nn_interaction_indices, type="avg+1"
+                )
+            ),
+            avg_nnn_matrix=stop_gradient(
+                get_jax_adjacency_matrix(
+                    list_representation=nnn_interaction_indices, type="avg+1"
+                )
+            ),
+            zero_to_neg_inf_function=transform_jax_zero_matrix_to_neg_infinity,
         ),
     )
 
@@ -162,9 +198,9 @@ def jax_spread_matrices(*args) -> jnp.ndarray:
     return output
 
 
-def self_interaction_indices(n):
+def get_self_interaction_indices(n):
     return list([list([i]) for i in range(n)])
 
 
 if __name__ == "__main__":
-    print(resolve_lattice_parameters(3, "linear", False)["nnn_spread_matrix"])
+    print(resolve_lattice_parameters(3, "linear", False))
