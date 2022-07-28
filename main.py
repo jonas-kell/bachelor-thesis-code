@@ -71,6 +71,7 @@ def execute_computation(
     hamiltonian_h_parameter: float = -0.7,
     num_chains: int = 100,
     thermalization_sweeps: int = 25,
+    nqs_batch_size: int = 1000,
 ):
     lattice_parameters = resolve_lattice_parameters(
         shape=lattice_shape, size=lattice_size, periodic=lattice_periodic
@@ -90,6 +91,7 @@ def execute_computation(
         hamiltonian_h_parameter=hamiltonian_h_parameter,
         num_chains=num_chains,
         thermalization_sweeps=thermalization_sweeps,
+        nqs_batch_size=nqs_batch_size,
     )
 
 
@@ -115,6 +117,7 @@ if __name__ == "__main__":
         "hamiltonian_h_parameter": -0.7,
         "num_chains": 100,
         "thermalization_sweeps": 25,
+        "nqs_batch_size": 1000,
     }
 
     additional_parameter_strings = [] if len(sys.argv) < 2 else sys.argv[1:]

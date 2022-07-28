@@ -34,6 +34,7 @@ def execute_ground_state_search(
     hamiltonian_h_parameter: int = -0.7,
     num_chains: int = 100,
     thermalization_sweeps: int = 25,
+    nqs_batch_size: int = 1000,
 ):
     # Get lattice parameters
     L = lattice_parameters["nr_sites"]
@@ -43,7 +44,7 @@ def execute_ground_state_search(
     )
 
     # Variational wave function
-    psi = jVMC.vqs.NQS(model, seed=1234)
+    psi = jVMC.vqs.NQS(model, seed=1234, batchSize=nqs_batch_size)
 
     # Set up hamiltonian
     interaction_used = np.zeros((L, L), dtype=np.bool8)
@@ -115,6 +116,7 @@ def execute_ground_state_search(
         "n_steps": n_steps,
         "num_chains": num_chains,
         "thermalization_sweeps": thermalization_sweeps,
+        "nqs_batch_size": nqs_batch_size,
     }
     # (threshold, reached)
     var_thresholds = [
