@@ -12,22 +12,23 @@ import jax.random as random
 sys.path.append(os.path.abspath("./../"))
 sys.path.append(os.path.abspath("./../models"))
 sys.path.append(os.path.abspath("./../structures"))
-from models.metaformer import Metaformer
+from models.metaformer import Attention
 from structures.lattice_parameter_resolver import resolve_lattice_parameters
 
 
-input_size = 15
+embed_dim = 8 * 2
+nr_patches = 15
 
 lattice_parameters = resolve_lattice_parameters(
-    shape="linear", size=input_size, periodic=False
+    shape="linear", size=nr_patches, periodic=False
 )
 
-model = Metaformer(
-    lattice_parameters=lattice_parameters, embed_dim=5, embed_mode="duplicate_spread"
+model = Attention(
+    embed_dim=embed_dim, num_heads=8, qkv_bias=True, mixing_symmetry="arbitrary"
 )
 
-x = random.randint(random.PRNGKey(0), (input_size,), 0, 2)
+x = jnp.ones((nr_patches, embed_dim))
 
 params = model.init(random.PRNGKey(0), x)
 
-print(model.apply(params, x))
+print(model.apply(params, x).shape)

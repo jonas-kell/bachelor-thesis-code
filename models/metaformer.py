@@ -13,6 +13,71 @@ from structures.lattice_parameter_resolver import LatticeParameters
 from jax.experimental.host_callback import id_print
 
 
+class Identity(nn.Module):
+    """Simple Identity Operator"""
+
+    def __call__(self, x):
+        return x
+
+
+class Attention(nn.Module):
+    """Default attention module of a Transformer
+
+    Initialization arguments:
+        * ``embed_dim``: Embed dimension. Needs to be a whole number multiple of num_heads
+        * ``num_heads``: Number of attention heads to use. Needs to be a whole number
+        * ``qkv_bias``: If there should be a bias used in the qkv calculation matrix
+        * ``mixing_symmetry``: To decide which graph mode to use for graph-attention
+    """
+
+    embed_dim: int = 15
+    num_heads: int = 3
+    qkv_bias: bool = True
+    mixing_symmetry: Literal["arbitrary", "symm_nn", "symm_nnn"] = "arbitrary"
+
+    def setup(self):
+        head_dim = self.embed_dim // self.num_heads
+        self.scale = head_dim**-0.5
+
+        # in: self.embed_dim;  out: self.embed_dim * 3
+        self.qkv = nn.Dense(self.embed_dim * 3, use_bias=self.qkv_bias)
+
+        # in: self.embed_dim;  out: self.embed_dim
+        self.proj = nn.Dense(self.embed_dim, use_bias=True)
+
+        self.graph_projection = (
+            Identity()  # arbitrary lets this behave as a VT, not a GVT
+            # if mixing_symmetry == "arbitrary"
+            # else GraphMaskAttention(
+            #     size=patch_nr_side_length,
+            #     graph_layer=mixing_symmetry,
+            # )
+        )
+
+    def __call__(self, x):
+        N, C = x.shape
+
+        qkv = (
+            self.qkv(x)
+            .reshape(N, 3, self.num_heads, C // self.num_heads)
+            .transpose(1, 2, 0, 3)
+        )
+
+        q, k, v = qkv[0], qkv[1], qkv[2]
+
+        attn = (q @ k.transpose(0, 2, 1)) * self.scale
+
+        attn = self.graph_projection(attn)  # modifies to graph attention
+
+        attn = nn.softmax(attn, axis=2)
+
+        x = (attn @ v).transpose(0, 2, 1).reshape(N, C)
+
+        x = self.proj(x)
+
+        return x
+
+
 class SiteEmbed(nn.Module):
     """Transforms the input of "sites x 0/1-spin-states" to a numeric array of size "sites x embed_dim"
     Uses the embed_mode parameter to determine the way the information is embedded
