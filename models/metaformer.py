@@ -278,11 +278,6 @@ class SiteEmbed(nn.Module):
 
         return x
 
-    # as the module contains lists/dicts (e.g. lattice_parameters), it is not hashable.
-    # this could cause problems if more than one instance of an unhashable module is used. But here it should be fine for now
-    def __hash__(self):
-        return id(self)
-
 
 class Metaformer(nn.Module):
     """Metafromer architecture, based on the experiments conducted for graph-image-processing
