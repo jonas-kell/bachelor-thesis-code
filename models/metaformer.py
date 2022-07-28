@@ -148,15 +148,12 @@ class Block(nn.Module):
     token_mixer: nn.Module
     mlp_ratio: float = 4.0
     act_layer: Callable = nn.gelu
-    norm_layer: nn.Module = nn.normalization.LayerNorm
+    norm_layer: Callable = nn.LayerNorm
 
     def setup(self):
-        self.norm1 = self.norm_layer
-        self.token_mixer = self.token_mixer
-        self.norm2 = self.norm_layer
-
         mlp_hidden_dim = int(self.embed_dim * self.mlp_ratio)
 
+        self.norm = self.norm_layer()
         self.mlp = Mlp(
             hidden_features=mlp_hidden_dim,
             out_features=self.embed_dim,
@@ -164,11 +161,11 @@ class Block(nn.Module):
         )
 
     def __call__(self, x):
-        y = self.norm1(x)
+        y = self.norm(x)
         y = self.token_mixer(y)
         x = x + y
 
-        z = self.norm2(x)
+        z = self.norm(x)
         z = self.mlp(z)
         x = x + z
 
@@ -193,7 +190,7 @@ class TokenMixer(nn.Module):
     def setup(self):
         # ! attention
         if self.token_mixer == "attention":
-            self.token_mixer = Attention(
+            self.token_mixer_module = Attention(
                 lattice_parameters=self.lattice_parameters,
                 embed_dim=self.embed_dim,
                 num_heads=self.num_heads,
@@ -204,7 +201,7 @@ class TokenMixer(nn.Module):
         # # ! pooling
         # elif self.token_mixer == "pooling":
         #     if self.mixing_symmetry in ["symm_nn", "symm_nnn"]:
-        #         self.token_mixer = GraphMaskPooling(
+        #         self.token_mixer_module = GraphMaskPooling(
         #             graph_layer=self.mixing_symmetry,
         #         )
         #     else:
@@ -218,7 +215,7 @@ class TokenMixer(nn.Module):
         #         raise RuntimeError(
         #             f"Mixing symmetry modifier {self.mixing_symmetry} not supported for convolution"
         #         )
-        #     self.token_mixer = GraphMaskConvolution(
+        #     self.token_mixer_module = GraphMaskConvolution(
         #         graph_layer=self.mixing_symmetry,
         #         embed_dim=self.embed_dim,
         #     )
@@ -229,7 +226,7 @@ class TokenMixer(nn.Module):
             )
 
     def __call__(self, x):
-        return self.token_mixer(x)
+        return self.token_mixer_module(x)
 
 
 class SiteEmbed(nn.Module):
@@ -295,13 +292,13 @@ class Metaformer(nn.Module):
     """
 
     lattice_parameters: LatticeParameters
-    embed_dim: int = 5
+    embed_dim: int = 60  # ! must be divisible by num_heads
     embed_mode: Literal[
         "duplicate_spread", "duplicate_nn", "duplicate_nnn"
     ] = "duplicate_spread"
     depth: int = 12
     mlp_ratio: float = 4.0
-    norm_layer: nn.Module = nn.normalization.LayerNorm
+    norm_layer: Callable = nn.LayerNorm
     act_layer: Callable = nn.gelu
     # token mixing
     token_mixer: Literal[
@@ -311,7 +308,7 @@ class Metaformer(nn.Module):
     ] = "attention"
     mixing_symmetry: Literal["arbitrary", "symm_nn", "symm_nnn"] = "arbitrary"
     # attention specific arguments
-    num_heads: int = 3
+    num_heads: int = 6
     qkv_bias: bool = True
 
     def setup(self):
@@ -323,7 +320,7 @@ class Metaformer(nn.Module):
         )
 
         # Blocks
-        self.blocks = nn.ModuleList(
+        self.blocks = nn.Sequential(
             [
                 Block(
                     embed_dim=self.embed_dim,
@@ -343,7 +340,7 @@ class Metaformer(nn.Module):
         )
 
         # Norm
-        self.norm = self.norm_layer
+        self.norm = self.norm_layer()
 
         # Pooling-dimension-reducing-head
         self.head = AveragingConvolutionHead()
@@ -351,8 +348,7 @@ class Metaformer(nn.Module):
     def __call__(self, x):
         x = self.site_embed(x)
 
-        for blk in self.blocks:
-            x = blk(x)
+        x = self.blocks(x)
 
         x = self.norm(x)
 
