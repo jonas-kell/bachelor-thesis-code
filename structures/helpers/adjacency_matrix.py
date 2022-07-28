@@ -4,7 +4,7 @@ from typing import Literal
 
 
 def transform_jax_zero_matrix_to_neg_infinity(matrix: jnp.ndarray) -> jnp.ndarray:
-    return jnp.where(matrix == 0.0, jnp.inf, matrix)
+    return jnp.where(matrix == 0.0, -jnp.inf, matrix)
 
 
 # !! if the matrix has an empty row (unconnected node) in "avg" mode it throws an nan/inf error because of division by 0. Better use "avg+1" to be save
