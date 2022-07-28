@@ -32,6 +32,8 @@ def execute_ground_state_search(
     tensorboard_folder_path: str,
     hamiltonian_J_parameter: int = -1,
     hamiltonian_h_parameter: int = -0.7,
+    num_chains: int = 100,
+    thermalization_sweeps: int = 25,
 ):
     # Get lattice parameters
     L = lattice_parameters["nr_sites"]
@@ -69,10 +71,10 @@ def execute_ground_state_search(
         (L,),
         random.PRNGKey(4321),
         updateProposer=jVMC.sampler.propose_spin_flip_Z2,
-        numChains=100,
+        numChains=num_chains,
         sweepSteps=L,
         numSamples=n_samples,
-        thermalizationSweeps=25,
+        thermalizationSweeps=thermalization_sweeps,
     )
 
     # Set up TDVP
@@ -101,22 +103,40 @@ def execute_ground_state_search(
         tensorboard_folder,
         flush_secs=flush_secs,
     )
-
+    hparams_to_log = {
+        "model_name": model_name,
+        "lattice_shape_name": lattice_parameters["shape_name"],
+        "lattice_nr_sites": lattice_parameters["nr_sites"],
+        "lattice_periodic": lattice_parameters["periodic"],
+        "lattice_size": lattice_parameters["size"],
+        "hamiltonian_J_parameter": hamiltonian_J_parameter,
+        "hamiltonian_h_parameter": hamiltonian_h_parameter,
+        "n_samples": n_samples,
+        "n_steps": n_steps,
+        "num_chains": num_chains,
+        "thermalization_sweeps": thermalization_sweeps,
+    }
+    # (threshold, reached)
+    var_thresholds = [
+        [0.2, False],
+        [0.05, False],
+        [0.02, False],
+        [0.01, False],
+        [0.005, False],
+        [0.002, False],
+    ]
+    hparams_logger_vals = {
+        "var_below_0.2": n_steps,
+        "var_below_0.05": n_steps,
+        "var_below_0.02": n_steps,
+        "var_below_0.01": n_steps,
+        "var_below_0.005": n_steps,
+        "var_below_0.002": n_steps,
+    }
+    # the hyperparameter module is used normally to compare used hyperparamaters for multiple runs in one "script-execution". I can only get information about the interesting metrics (loss/accuracy/...) after my model has trained sufficiently long. It may crash or be aborted earlier however, what would result in not writing the corresponding hyperparameter entry. As the evaluating is done manually anyway, just a placeholder metric is inserted, to allow for the logging of hyperparameters for now. (no metric results in nothing being logged/displayed at all)
     writer.add_hparams(
-        {
-            "model_name": model_name,
-            "lattice_shape_name": lattice_parameters["shape_name"],
-            "lattice_nr_sites": lattice_parameters["nr_sites"],
-            "lattice_periodic": lattice_parameters["periodic"],
-            "lattice_size": lattice_parameters["size"],
-            "hamiltonian_J_parameter": hamiltonian_J_parameter,
-            "hamiltonian_h_parameter": hamiltonian_h_parameter,
-            "n_samples": n_samples,
-            "n_steps": n_steps,
-        },
-        {
-            "placeholder": 0
-        },  # the hyperparameter module is used normally to compare used hyperparamaters for multiple runs in one "script-execution". I can only get information about the interesting metrics (loss/accuracy/...) after my model has trained sufficiently long. It may crash or be aborted earlier however, what would result in not writing the corresponding hyperparameter entry. As the evaluating is done manually anyway, just a placeholder metric is inserted, to allow for the logging of hyperparameters for now. (no metric results in nothing being logged/displayed at all)
+        hparams_to_log,
+        hparams_logger_vals,
         run_name="./",
     )
 
@@ -148,6 +168,19 @@ def execute_ground_state_search(
         writer.add_scalar("E/L", float(jax.numpy.real(tdvpEquation.ElocMean0) / L), n)
         writer.add_scalar("Var(E)/L", float(tdvpEquation.ElocVar0 / L), n)
         writer.add_scalar("time/s", float(processing_time), n)
+
+        # write var milestones for hparam tracking
+        var = float(tdvpEquation.ElocVar0 / L)
+        if n > 5:  # small warmup period
+            for threshold_array in var_thresholds:
+                if var < threshold_array[0] and not threshold_array[1]:
+                    threshold_array[1] = True
+                    hparams_logger_vals[f"var_below_{str(threshold_array[0])}"] = n
+                    writer.add_hparams(
+                        hparams_to_log,
+                        hparams_logger_vals,
+                        run_name="./",
+                    )
 
     # close the writer
     writer.close()
