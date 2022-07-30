@@ -1,3 +1,11 @@
+import os
+
+disable_preallocation = True
+if disable_preallocation:
+    os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "False"
+    os.environ["XLA_PYTHON_CLIENT_ALLOCATOR"] = "platform"
+    print("CAUTION. Jax preallocation is disabled. This may hurt performance")
+
 import jax
 from jax.config import config
 
@@ -24,8 +32,6 @@ if not gpu_avail:
     print("Running on CPU not supported. Too slow and therefore not easily comparable")
     exit()
 
-
-import os
 import sys
 
 sys.path.append(os.path.abspath("./structures"))
@@ -43,7 +49,7 @@ from models.metaformer import (
 )
 
 # local folder constants
-tensorboard_folder_path = "/media/jonas/69B577D0C4C25263/MLData/tensorboard_jax/"
+tensorboard_folder_path = "/media/jonas/69B577D0C4C25263/MLData/tensorboard_trash/"
 
 
 # add custom configurations in this dict
