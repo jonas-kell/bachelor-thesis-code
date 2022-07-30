@@ -66,6 +66,10 @@ def execute_ground_state_search(
             jVMC.operator.scal_opstr(hamiltonian_h_parameter, (jVMC.operator.Sx(l),))
         )
 
+    # Number of parameters
+    number_model_parameters = sum(x.size for x in jax.tree_leaves(psi.params))
+    print(f"The model has {number_model_parameters} parameters")
+
     # Set up sampler
     sampler = jVMC.sampler.MCSampler(
         psi,
@@ -106,6 +110,7 @@ def execute_ground_state_search(
     )
     hparams_to_log = {
         "model_name": model_name,
+        "number_model_parameters": number_model_parameters,
         "lattice_shape_name": lattice_parameters["shape_name"],
         "lattice_nr_sites": lattice_parameters["nr_sites"],
         "lattice_periodic": lattice_parameters["periodic"],

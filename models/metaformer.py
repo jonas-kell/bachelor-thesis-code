@@ -385,5 +385,9 @@ def graph_transformer_nnn(lattice_parameters: LatticeParameters, **kwargs):
         embed_mode="duplicate_nnn",
         mixing_symmetry="symm_nnn",
         token_mixer="attention",
+        depth=5,
+        embed_dim=6,
+        num_heads=3,
+        mlp_ratio=2,
         **kwargs,
     )
