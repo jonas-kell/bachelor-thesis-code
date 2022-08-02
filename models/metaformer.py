@@ -5,6 +5,7 @@ import jax.numpy as jnp
 import flax
 import flax.linen as nn
 import jVMC.nets.activation_functions as act_funs
+from jax.lax import stop_gradient
 
 from typing import Callable, Literal, Callable
 
@@ -68,7 +69,7 @@ class Attention(nn.Module):
 
     def setup(self):
         head_dim = self.embed_dim // self.num_heads
-        self.scale = head_dim**-0.5
+        self.scale = head_dim ** -0.5
 
         # in: self.embed_dim;  out: self.embed_dim * 3
         self.qkv = nn.Dense(self.embed_dim * 3, use_bias=self.qkv_bias)
@@ -143,6 +144,79 @@ class GraphMaskAttention(nn.Module):
         return x
 
 
+class GraphMaskPooling(nn.Module):
+    """Graph-Mask implementation that uses averaging neighbor interaction in order to facilitate pooling"""
+
+    lattice_parameters: LatticeParameters
+    graph_layer: Literal["symm_nn", "symm_nnn"] = "symm_nn"
+
+    # interaction scaling here has been chosen to be uniform. (1, 1, 1). This could be explored further
+    def setup(self):
+        self.pooling_interaction_matrix = (
+            1 * self.lattice_parameters["adjacency_matrices"]["avg_self_matrix"]
+        )
+
+        if self.graph_layer in ["symm_nn", "symm_nnn"]:
+            self.pooling_interaction_matrix += (
+                1 * self.lattice_parameters["adjacency_matrices"]["avg_nn_matrix"]
+            )
+
+        if self.graph_layer == "symm_nnn":
+            self.pooling_interaction_matrix += (
+                1 * self.lattice_parameters["adjacency_matrices"]["avg_nnn_matrix"]
+            )
+
+        self.pooling_interaction_matrix = stop_gradient(self.pooling_interaction_matrix)
+
+    def __call__(self, x):
+
+        x = jnp.matmul(self.pooling_interaction_matrix, x)
+
+        return x
+
+
+class GraphMaskConvolution(nn.Module):
+    """Graph-Mask implementation that uses averaging neighbor interaction in order to facilitate pooling"""
+
+    lattice_parameters: LatticeParameters
+    embed_dim: int
+    graph_layer: Literal["symm_nn", "symm_nnn"] = "symm_nn"
+
+    def setup(self):
+        self.factors = self.param(
+            "factors", nn.initializers.normal(), (3, self.embed_dim)
+        )
+
+    def __call__(self, x):
+        res = jnp.einsum(
+            "d,nd->nd",
+            self.factors[0],
+            jnp.matmul(
+                self.lattice_parameters["adjacency_matrices"]["add_self_matrix"], x
+            ),
+        )
+
+        if self.graph_layer in ["symm_nn", "symm_nnn"]:
+            res += jnp.einsum(
+                "d,nd->nd",
+                self.factors[1],
+                jnp.matmul(
+                    self.lattice_parameters["adjacency_matrices"]["add_nn_matrix"], x
+                ),
+            )
+
+        if self.graph_layer == "symm_nnn":
+            res += jnp.einsum(
+                "d,nd->nd",
+                self.factors[2],
+                jnp.matmul(
+                    self.lattice_parameters["adjacency_matrices"]["add_nnn_matrix"], x
+                ),
+            )
+
+        return x
+
+
 class Block(nn.Module):
     embed_dim: int
     token_mixer: nn.Module
@@ -199,27 +273,29 @@ class TokenMixer(nn.Module):
                 mixing_symmetry=self.mixing_symmetry,
             )
 
-        # # ! pooling
-        # elif self.token_mixer == "pooling":
-        #     if self.mixing_symmetry in ["symm_nn", "symm_nnn"]:
-        #         self.token_mixer_module = GraphMaskPooling(
-        #             graph_layer=self.mixing_symmetry,
-        #         )
-        #     else:
-        #         raise RuntimeError(
-        #             f"Mixing symmetry modifier {self.mixing_symmetry} not supported for Pooling token mixer"
-        #         )
+        # ! pooling
+        elif self.token_mixer == "pooling":
+            if self.mixing_symmetry in ["symm_nn", "symm_nnn"]:
+                self.token_mixer_module = GraphMaskPooling(
+                    lattice_parameters=self.lattice_parameters,
+                    graph_layer=self.mixing_symmetry,
+                )
+            else:
+                raise RuntimeError(
+                    f"Mixing symmetry modifier {self.mixing_symmetry} not supported for Pooling token mixer"
+                )
 
-        # # ! graph convolution
-        # elif self.token_mixer == "convolution":
-        #     if self.mixing_symmetry not in ["symm_nn", "symm_nnn"]:
-        #         raise RuntimeError(
-        #             f"Mixing symmetry modifier {self.mixing_symmetry} not supported for convolution"
-        #         )
-        #     self.token_mixer_module = GraphMaskConvolution(
-        #         graph_layer=self.mixing_symmetry,
-        #         embed_dim=self.embed_dim,
-        #     )
+        # ! convolution
+        elif self.token_mixer == "convolution":
+            if self.mixing_symmetry not in ["symm_nn", "symm_nnn"]:
+                raise RuntimeError(
+                    f"Mixing symmetry modifier {self.mixing_symmetry} not supported for convolution"
+                )
+            self.token_mixer_module = GraphMaskConvolution(
+                lattice_parameters=self.lattice_parameters,
+                graph_layer=self.mixing_symmetry,
+                embed_dim=self.embed_dim,
+            )
 
         else:
             raise RuntimeError(
@@ -321,6 +397,7 @@ class Metaformer(nn.Module):
                 Block(
                     embed_dim=self.embed_dim,
                     token_mixer=TokenMixer(
+                        token_mixer=self.token_mixer,
                         lattice_parameters=self.lattice_parameters,
                         embed_dim=self.embed_dim,
                         mixing_symmetry=self.mixing_symmetry,
@@ -385,9 +462,25 @@ def graph_transformer_nnn(lattice_parameters: LatticeParameters, **kwargs):
         embed_mode="duplicate_nnn",
         mixing_symmetry="symm_nnn",
         token_mixer="attention",
-        depth=5,
-        embed_dim=6,
-        num_heads=3,
-        mlp_ratio=2,
+        **kwargs,
+    )
+
+
+def graph_conformer_nnn(lattice_parameters: LatticeParameters, **kwargs):
+    return Metaformer(
+        lattice_parameters=lattice_parameters,
+        embed_mode="duplicate_nnn",
+        mixing_symmetry="symm_nnn",
+        token_mixer="convolution",
+        **kwargs,
+    )
+
+
+def graph_poolformer_nnn(lattice_parameters: LatticeParameters, **kwargs):
+    return Metaformer(
+        lattice_parameters=lattice_parameters,
+        embed_mode="duplicate_nnn",
+        mixing_symmetry="symm_nnn",
+        token_mixer="pooling",
         **kwargs,
     )
