@@ -46,10 +46,14 @@ from models.metaformer import (
     transformer,
     graph_transformer_nn,
     graph_transformer_nnn,
+    graph_poolformer_nn,
+    graph_poolformer_nnn,
+    graph_conformer_nn,
+    graph_conformer_nnn,
 )
 
 # local folder constants
-tensorboard_folder_path = "/media/jonas/69B577D0C4C25263/MLData/tensorboard_trash/"
+tensorboard_folder_path = "/media/jonas/69B577D0C4C25263/MLData/tensorboard_jax/"
 
 
 # add custom configurations in this dict
@@ -61,6 +65,18 @@ available_models = {
         lattice_parameters=lattice_parameters
     ),
     "GF-NNN": lambda lattice_parameters: graph_transformer_nnn(
+        lattice_parameters=lattice_parameters
+    ),
+    "GP-NN": lambda lattice_parameters: graph_poolformer_nn(
+        lattice_parameters=lattice_parameters
+    ),
+    "GP-NNN": lambda lattice_parameters: graph_poolformer_nnn(
+        lattice_parameters=lattice_parameters
+    ),
+    "GC-NN": lambda lattice_parameters: graph_conformer_nn(
+        lattice_parameters=lattice_parameters
+    ),
+    "GC-NNN": lambda lattice_parameters: graph_conformer_nnn(
         lattice_parameters=lattice_parameters
     ),
 }
@@ -125,6 +141,11 @@ if __name__ == "__main__":
         "thermalization_sweeps": 25,
         "nqs_batch_size": 1000,
     }
+
+    # depth=5,
+    # embed_dim=6,
+    # num_heads=3,
+    # mlp_ratio=2
 
     additional_parameter_strings = [] if len(sys.argv) < 2 else sys.argv[1:]
 

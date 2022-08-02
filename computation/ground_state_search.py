@@ -66,10 +66,6 @@ def execute_ground_state_search(
             jVMC.operator.scal_opstr(hamiltonian_h_parameter, (jVMC.operator.Sx(l),))
         )
 
-    # Number of parameters
-    number_model_parameters = sum(x.size for x in jax.tree_leaves(psi.params))
-    print(f"The model has {number_model_parameters} parameters")
-
     # Set up sampler
     sampler = jVMC.sampler.MCSampler(
         psi,
@@ -81,6 +77,10 @@ def execute_ground_state_search(
         numSamples=n_samples,
         thermalizationSweeps=thermalization_sweeps,
     )
+
+    # Number of parameters
+    number_model_parameters = sum(x.size for x in jax.tree_leaves(psi.params))
+    print(f"The model has {number_model_parameters} parameters")
 
     # Set up TDVP
     tdvpEquation = jVMC.util.tdvp.TDVP(

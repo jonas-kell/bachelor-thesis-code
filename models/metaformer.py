@@ -69,7 +69,7 @@ class Attention(nn.Module):
 
     def setup(self):
         head_dim = self.embed_dim // self.num_heads
-        self.scale = head_dim ** -0.5
+        self.scale = head_dim**-0.5
 
         # in: self.embed_dim;  out: self.embed_dim * 3
         self.qkv = nn.Dense(self.embed_dim * 3, use_bias=self.qkv_bias)
@@ -466,12 +466,32 @@ def graph_transformer_nnn(lattice_parameters: LatticeParameters, **kwargs):
     )
 
 
+def graph_conformer_nn(lattice_parameters: LatticeParameters, **kwargs):
+    return Metaformer(
+        lattice_parameters=lattice_parameters,
+        embed_mode="duplicate_nn",
+        mixing_symmetry="symm_nn",
+        token_mixer="convolution",
+        **kwargs,
+    )
+
+
 def graph_conformer_nnn(lattice_parameters: LatticeParameters, **kwargs):
     return Metaformer(
         lattice_parameters=lattice_parameters,
         embed_mode="duplicate_nnn",
         mixing_symmetry="symm_nnn",
         token_mixer="convolution",
+        **kwargs,
+    )
+
+
+def graph_poolformer_nn(lattice_parameters: LatticeParameters, **kwargs):
+    return Metaformer(
+        lattice_parameters=lattice_parameters,
+        embed_mode="duplicate_nn",
+        mixing_symmetry="symm_nn",
+        token_mixer="pooling",
         **kwargs,
     )
 

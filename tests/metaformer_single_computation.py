@@ -41,6 +41,8 @@ params = model.init(random.PRNGKey(0), x)
 number_model_parameters = sum(x.size for x in jax.tree_leaves(params))
 print(f"The model has {number_model_parameters} parameters")
 
+# print(params)  # Debug if network parameters get backpropagated
+
 model_apply = jax.jit(lambda p, x: model.apply(p, x))
 
 for i in range(1):
