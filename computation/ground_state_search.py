@@ -3,6 +3,7 @@ Mostly copy-paste from jvmc example initially. Modified to fit my needs
 https://github.com/markusschmitt/vmc_jax/blob/master/examples/ex0_ground_state_search.py
 """
 
+from typing import Callable, Literal
 import jax
 import jVMC
 import jax.random as random
@@ -28,13 +29,30 @@ def execute_ground_state_search(
     n_samples: int,
     lattice_parameters: LatticeParameters,
     model_name: str,
-    model: nn.Module,
+    model_fn: Callable[
+        [
+            LatticeParameters,
+            int,  # depth
+            int,  # embed_dim
+            int,  # num_heads
+            int,  # mlp_ratio
+            Literal["single-real", "single-complex", "single-split", "two-real"],
+        ],
+        nn.Module,
+    ],
     tensorboard_folder_path: str,
     hamiltonian_J_parameter: int = -1,
     hamiltonian_h_parameter: int = -0.7,
     num_chains: int = 100,
     thermalization_sweeps: int = 25,
     nqs_batch_size: int = 1000,
+    depth: int = 5,
+    embed_dim: int = 6,
+    num_heads: int = 3,
+    mlp_ratio: int = 2,
+    ansatz: Literal[
+        "single-real", "single-complex", "single-split", "two-real"
+    ] = "single-real",
 ):
     # Get lattice parameters
     L = lattice_parameters["nr_sites"]
@@ -42,6 +60,9 @@ def execute_ground_state_search(
     print(
         f"We calculate the '{lattice_parameters['shape_name']}' lattice of size {lattice_parameters['size']} which means it has {L} lattice-sites. The boundary condition is {'periodic' if lattice_parameters['periodic'] else 'Non-periodic'}"
     )
+
+    # get model
+    model = model_fn(lattice_parameters, depth, embed_dim, num_heads, mlp_ratio, ansatz)
 
     # Variational wave function
     psi = jVMC.vqs.NQS(model, seed=1234, batchSize=nqs_batch_size)
@@ -79,7 +100,7 @@ def execute_ground_state_search(
     )
 
     # Number of parameters
-    number_model_parameters = sum(x.size for x in jax.tree_leaves(psi.params))
+    number_model_parameters = sum(x.size for x in jax.tree_util.tree_leaves(psi.params))
     print(f"The model has {number_model_parameters} parameters")
 
     # Set up TDVP
@@ -111,6 +132,11 @@ def execute_ground_state_search(
     hparams_to_log = {
         "model_name": model_name,
         "number_model_parameters": number_model_parameters,
+        "depth": depth,
+        "embed_dim": embed_dim,
+        "num_heads": num_heads,
+        "mlp_ratio": mlp_ratio,
+        "ansatz": ansatz,
         "lattice_shape_name": lattice_parameters["shape_name"],
         "lattice_nr_sites": lattice_parameters["nr_sites"],
         "lattice_periodic": lattice_parameters["periodic"],

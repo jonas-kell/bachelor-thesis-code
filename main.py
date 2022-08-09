@@ -30,9 +30,9 @@ if gpu_avail:
 
 if not gpu_avail:
     print("Running on CPU not supported. Too slow and therefore not easily comparable")
-    exit()
 
 import sys
+from typing import Literal
 
 sys.path.append(os.path.abspath("./structures"))
 from structures.lattice_parameter_resolver import resolve_lattice_parameters
@@ -53,31 +53,66 @@ from models.metaformer import (
 )
 
 # local folder constants
-tensorboard_folder_path = "/media/jonas/69B577D0C4C25263/MLData/tensorboard_jax/"
+tensorboard_folder_path = "/home/jonas/logs_tensorboard/"
 
 
 # add custom configurations in this dict
 available_models = {
-    "CNN": lambda lattice_parameters: cnn(lattice_parameters["nr_sites"]),
-    "RBM": lambda lattice_parameters: complexRBM(),
-    "TF": lambda lattice_parameters: transformer(lattice_parameters=lattice_parameters),
-    "GF-NN": lambda lattice_parameters: graph_transformer_nn(
+    "CNN": lambda lattice_parameters, depth, embed_dim, num_heads, mlp_ratio, ansatz: cnn(  # ignore graph specific params
+        lattice_parameters["nr_sites"]
+    ),
+    "RBM": lambda lattice_parameters, depth, embed_dim, num_heads, mlp_ratio, ansatz: complexRBM(),  # ignore graph specific params
+    "TF": lambda lattice_parameters, depth, embed_dim, num_heads, mlp_ratio, ansatz: transformer(
+        lattice_parameters=lattice_parameters,
+        depth=depth,
+        embed_dim=embed_dim,
+        num_heads=num_heads,
+        mlp_ratio=mlp_ratio,
+        ansatz=ansatz,
+    ),
+    "GF-NN": lambda lattice_parameters, depth, embed_dim, num_heads, mlp_ratio, ansatz: graph_transformer_nn(
+        lattice_parameters=lattice_parameters,
+        depth=depth,
+        embed_dim=embed_dim,
+        num_heads=num_heads,
+        mlp_ratio=mlp_ratio,
+        ansatz=ansatz,
+    ),
+    "GF-NNN": lambda lattice_parameters, depth, embed_dim, num_heads, mlp_ratio, ansatz: graph_transformer_nnn(
+        lattice_parameters=lattice_parameters,
+        depth=depth,
+        embed_dim=embed_dim,
+        num_heads=num_heads,
+        mlp_ratio=mlp_ratio,
+        ansatz=ansatz,
+    ),
+    # TODO "dumb" pooling action as comparison
+    "GP-NN": lambda lattice_parameters, depth, embed_dim, num_heads, mlp_ratio, ansatz: graph_poolformer_nn(
+        lattice_parameters=lattice_parameters,
+        depth=depth,
+        embed_dim=embed_dim,
+        num_heads=num_heads,
+        mlp_ratio=mlp_ratio,
+        ansatz=ansatz,
+    ),
+    "GP-NNN": lambda lattice_parameters, depth, embed_dim, num_heads, mlp_ratio, ansatz: graph_poolformer_nnn(
         lattice_parameters=lattice_parameters
     ),
-    "GF-NNN": lambda lattice_parameters: graph_transformer_nnn(
-        lattice_parameters=lattice_parameters
+    "GC-NN": lambda lattice_parameters, depth, embed_dim, num_heads, mlp_ratio, ansatz: graph_conformer_nn(
+        lattice_parameters=lattice_parameters,
+        depth=depth,
+        embed_dim=embed_dim,
+        num_heads=num_heads,
+        mlp_ratio=mlp_ratio,
+        ansatz=ansatz,
     ),
-    "GP-NN": lambda lattice_parameters: graph_poolformer_nn(
-        lattice_parameters=lattice_parameters
-    ),
-    "GP-NNN": lambda lattice_parameters: graph_poolformer_nnn(
-        lattice_parameters=lattice_parameters
-    ),
-    "GC-NN": lambda lattice_parameters: graph_conformer_nn(
-        lattice_parameters=lattice_parameters
-    ),
-    "GC-NNN": lambda lattice_parameters: graph_conformer_nnn(
-        lattice_parameters=lattice_parameters
+    "GC-NNN": lambda lattice_parameters, depth, embed_dim, num_heads, mlp_ratio, ansatz: graph_conformer_nnn(
+        lattice_parameters=lattice_parameters,
+        depth=depth,
+        embed_dim=embed_dim,
+        num_heads=num_heads,
+        mlp_ratio=mlp_ratio,
+        ansatz=ansatz,
     ),
 }
 
@@ -85,7 +120,14 @@ available_models = {
 def execute_computation(
     n_steps: int,
     n_samples: int,
-    lattice_shape: str,
+    lattice_shape: Literal[
+        "linear",
+        "cubic",
+        "trigonal_square",
+        "trigonal_diamond",
+        "trigonal_hexagonal",
+        "hexagonal",
+    ],
     lattice_size: int,
     lattice_periodic: bool,
     model_name: str,
@@ -94,37 +136,39 @@ def execute_computation(
     num_chains: int = 100,
     thermalization_sweeps: int = 25,
     nqs_batch_size: int = 1000,
+    depth: int = 5,
+    embed_dim: int = 6,
+    num_heads: int = 3,
+    mlp_ratio: int = 2,
+    ansatz: Literal[
+        "single-real", "single-complex", "single-split", "two-real"
+    ] = "single-real",
 ):
     lattice_parameters = resolve_lattice_parameters(
         shape=lattice_shape, size=lattice_size, periodic=lattice_periodic
     )
 
     if model_name in available_models:
-        model = available_models[model_name](lattice_parameters)
+        model_fn = available_models[model_name]
 
     execute_ground_state_search(
         n_steps=n_steps,
         n_samples=n_samples,
         lattice_parameters=lattice_parameters,
         model_name=model_name,
-        model=model,
+        model_fn=model_fn,
         tensorboard_folder_path=tensorboard_folder_path,
         hamiltonian_J_parameter=hamiltonian_J_parameter,
         hamiltonian_h_parameter=hamiltonian_h_parameter,
         num_chains=num_chains,
         thermalization_sweeps=thermalization_sweeps,
         nqs_batch_size=nqs_batch_size,
+        depth=depth,
+        embed_dim=embed_dim,
+        num_heads=num_heads,
+        mlp_ratio=mlp_ratio,
+        ansatz=ansatz,
     )
-
-
-# lattice_shape =
-
-# "linear"
-# "cubic"
-# "trigonal_square"
-# "trigonal_diamond"
-# "trigonal_hexagonal"
-# "hexagonal"
 
 
 if __name__ == "__main__":
@@ -140,12 +184,12 @@ if __name__ == "__main__":
         "num_chains": 100,
         "thermalization_sweeps": 25,
         "nqs_batch_size": 1000,
+        "depth": 5,
+        "embed_dim": 6,
+        "num_heads": 3,
+        "mlp_ratio": 2,
+        "ansatz": "single-real",
     }
-
-    # depth=5,
-    # embed_dim=6,
-    # num_heads=3,
-    # mlp_ratio=2
 
     additional_parameter_strings = [] if len(sys.argv) < 2 else sys.argv[1:]
 
