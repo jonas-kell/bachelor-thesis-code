@@ -166,7 +166,7 @@ def execute_ground_state_search(
         "var_below_0.005": n_steps,
         "var_below_0.002": n_steps,
     }
-    # the hyperparameter module is used normally to compare used hyperparamaters for multiple runs in one "script-execution". I can only get information about the interesting metrics (loss/accuracy/...) after my model has trained sufficiently long. It may crash or be aborted earlier however, what would result in not writing the corresponding hyperparameter entry. As the evaluating is done manually anyway, just a placeholder metric is inserted, to allow for the logging of hyperparameters for now. (no metric results in nothing being logged/displayed at all)
+    # the hyperparameter module is used normally to compare used hyperparamaters for multiple runs in one "script-execution". I can only get information about the interesting metrics (loss/accuracy/...) after my model has trained sufficiently long. It may crash or be aborted earlier however, what would result in not writing the corresponding hyperparameter entry. Therefor the hyperparameters are added everytime there is an update. Only the latest written info will be used by tensorboard
     writer.add_hparams(
         hparams_to_log,
         hparams_logger_vals,
