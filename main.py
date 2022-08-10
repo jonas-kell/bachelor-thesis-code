@@ -53,7 +53,7 @@ from models.metaformer import (
 )
 
 # local folder constants
-tensorboard_folder_path = "/home/jonas/logs_tensorboard/"
+tensorboard_folder_path = "/media/jonas/69B577D0C4C25263/MLData/tensorboard_jax/"
 
 
 # add custom configurations in this dict
@@ -96,7 +96,12 @@ available_models = {
         ansatz=ansatz,
     ),
     "GP-NNN": lambda lattice_parameters, depth, embed_dim, num_heads, mlp_ratio, ansatz: graph_poolformer_nnn(
-        lattice_parameters=lattice_parameters
+        lattice_parameters=lattice_parameters,
+        depth=depth,
+        embed_dim=embed_dim,
+        num_heads=num_heads,
+        mlp_ratio=mlp_ratio,
+        ansatz=ansatz,
     ),
     "GC-NN": lambda lattice_parameters, depth, embed_dim, num_heads, mlp_ratio, ansatz: graph_conformer_nn(
         lattice_parameters=lattice_parameters,
