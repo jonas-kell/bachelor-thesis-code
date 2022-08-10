@@ -148,6 +148,7 @@ def execute_computation(
     ansatz: Literal[
         "single-real", "single-complex", "single-split", "two-real"
     ] = "single-real",
+    early_abort_var: float = -1.0,
 ):
     lattice_parameters = resolve_lattice_parameters(
         shape=lattice_shape, size=lattice_size, periodic=lattice_periodic
@@ -173,6 +174,7 @@ def execute_computation(
         num_heads=num_heads,
         mlp_ratio=mlp_ratio,
         ansatz=ansatz,
+        early_abort_var=early_abort_var,
     )
 
 
@@ -194,6 +196,7 @@ if __name__ == "__main__":
         "num_heads": 3,
         "mlp_ratio": 2,
         "ansatz": "single-real",
+        "early_abort_var": -1.0,
     }
 
     additional_parameter_strings = [] if len(sys.argv) < 2 else sys.argv[1:]

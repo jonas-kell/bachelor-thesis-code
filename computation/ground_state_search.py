@@ -53,6 +53,7 @@ def execute_ground_state_search(
     ansatz: Literal[
         "single-real", "single-complex", "single-split", "two-real"
     ] = "single-real",
+    early_abort_var: float = -1.0,
 ):
     # Get lattice parameters
     L = lattice_parameters["nr_sites"]
@@ -204,7 +205,7 @@ def execute_ground_state_search(
 
         # write var milestones for hparam tracking
         var = float(tdvpEquation.ElocVar0 / L)
-        if n > 5:  # small warmup period
+        if n > 4:  # small warmup period
             for threshold_array in var_thresholds:
                 if var < threshold_array[0] and not threshold_array[1]:
                     threshold_array[1] = True
@@ -214,6 +215,10 @@ def execute_ground_state_search(
                         hparams_logger_vals,
                         run_name="./",
                     )
+
+            # abort early when target performance is reached
+            if early_abort_var > 0 and var < early_abort_var:
+                break
 
     # close the writer
     writer.close()
