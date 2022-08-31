@@ -118,7 +118,7 @@ def execute_ground_state_search(
     run_date = datetime.datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
     run_name = (
         lattice_parameters["shape_name"]
-        + f"({lattice_parameters['size']},{lattice_parameters['nr_sites']},{'p' if lattice_parameters['periodic']else 'np'})"
+        + f"({lattice_parameters['size']},{lattice_parameters['nr_sites']},{'p' if lattice_parameters['periodic']else 'np'},{lattice_parameters['nr_random_swaps']})"
         + "_with_"
         + model_name
         + "_at_"
