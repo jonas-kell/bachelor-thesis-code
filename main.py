@@ -53,7 +53,7 @@ from models.metaformer import (
 )
 
 # local folder constants
-tensorboard_folder_path = "/media/jonas/69B577D0C4C25263/MLData/tensorboard_jax/"
+tensorboard_folder_path = "/media/jonas/69B577D0C4C25263/MLData/tensorboard_trash/"
 
 
 # add custom configurations in this dict

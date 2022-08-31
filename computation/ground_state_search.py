@@ -22,6 +22,7 @@ sys.path.append(os.path.abspath("./../structures"))
 
 from torch.utils.tensorboard import SummaryWriter
 from structures.lattice_parameter_resolver import LatticeParameters
+from hamiltonian import get_hamiltonian
 
 
 def execute_ground_state_search(
@@ -69,24 +70,11 @@ def execute_ground_state_search(
     psi = jVMC.vqs.NQS(model, seed=1234, batchSize=nqs_batch_size)
 
     # Set up hamiltonian
-    interaction_used = np.zeros((L, L), dtype=np.bool8)
-    hamiltonian = jVMC.operator.BranchFreeOperator()
-    for l in range(L):
-        for l_n in lattice_parameters["nn_interaction_indices"][l]:
-            if not interaction_used[l, l_n]:
-                interaction_used[l_n, l] = interaction_used[l, l_n] = True
-                hamiltonian.add(
-                    jVMC.operator.scal_opstr(
-                        hamiltonian_J_parameter,
-                        (
-                            jVMC.operator.Sz(l),
-                            jVMC.operator.Sz(l_n),
-                        ),
-                    )
-                )
-        hamiltonian.add(
-            jVMC.operator.scal_opstr(hamiltonian_h_parameter, (jVMC.operator.Sx(l),))
-        )
+    hamiltonian = get_hamiltonian(
+        lattice_parameters=lattice_parameters,
+        hamiltonian_J_parameter=hamiltonian_J_parameter,
+        hamiltonian_h_parameter=hamiltonian_h_parameter,
+    )
 
     # Set up sampler
     sampler = jVMC.sampler.MCSampler(
