@@ -1,5 +1,7 @@
 from typing import Literal, TypedDict, Callable
 from jax.lax import stop_gradient
+import math
+import random
 
 from helpers.neighbors import (
     linear_lattice_get_nn_indices,
@@ -43,6 +45,7 @@ class AdjacencyMatrices(TypedDict):
 
 class LatticeParameters(TypedDict):
     nr_sites: int
+    self_interaction_indices: list
     nn_interaction_indices: list
     nnn_interaction_indices: list
     shape_name: str
@@ -51,6 +54,8 @@ class LatticeParameters(TypedDict):
     nn_spread_matrix: jnp.ndarray
     nnn_spread_matrix: jnp.ndarray
     adjacency_matrices: AdjacencyMatrices
+    display_indices: list
+    display_indices_lookup: list
 
 
 def resolve_lattice_parameters(
@@ -64,6 +69,7 @@ def resolve_lattice_parameters(
         "hexagonal",
     ],
     periodic: bool = False,
+    random_swaps: int = 0,
 ) -> LatticeParameters:
     assert int(size) == size
     assert size > 0
@@ -109,17 +115,44 @@ def resolve_lattice_parameters(
 
     # aggregate data
     nr_lattice_sites = nr_function(n)
+    self_interaction_indices = get_self_interaction_indices(nr_lattice_sites)
     nn_interaction_indices = list(
         [nn_function(i, n, periodic_bounds=periodic) for i in range(nr_lattice_sites)]
     )
     nnn_interaction_indices = list(
         [nnn_function(i, n, periodic_bounds=periodic) for i in range(nr_lattice_sites)]
     )
+    display_indices = list(range(nr_lattice_sites))  # only needed if swapping occured
 
-    self_interaction_indices = get_self_interaction_indices(nr_lattice_sites)
+    # swap randomly for a number of times to get rid of a structurally induced correlation of true neighbors and encoding neighbors
+    if random_swaps < 0:
+        # approximate the number of swaps needed for a truly random shuffeling
+        random_swaps = (int)(1 / 2 * nr_lattice_sites * math.log(nr_lattice_sites))
+
+    random.seed(12)  # made that up for reproducability
+    for i in range(random_swaps):
+        swap_a = random.randint(0, nr_lattice_sites - 1)
+        swap_b = random.randint(0, nr_lattice_sites - 1)
+
+        # swap correlated indices
+        buf = display_indices[swap_a]
+        display_indices[swap_a] = display_indices[swap_b]
+        display_indices[swap_b] = buf
+
+    # swap list elements to conform to display_indices
+    self_interaction_indices = swap_neighbor_index_lists(
+        display_indices, self_interaction_indices
+    )  # this should not do anything with the list, if I did not make any mistakes
+    nn_interaction_indices = swap_neighbor_index_lists(
+        display_indices, nn_interaction_indices
+    )
+    nnn_interaction_indices = swap_neighbor_index_lists(
+        display_indices, nnn_interaction_indices
+    )
 
     lattice_parameters = LatticeParameters(
         nr_sites=nr_lattice_sites,
+        self_interaction_indices=self_interaction_indices,
         nn_interaction_indices=nn_interaction_indices,
         nnn_interaction_indices=nnn_interaction_indices,
         shape_name=shape,
@@ -168,6 +201,8 @@ def resolve_lattice_parameters(
             ),
             zero_to_neg_inf_function=transform_jax_zero_matrix_to_neg_infinity,
         ),
+        display_indices=display_indices,
+        display_indices_lookup=lookup_list_to_reorder_list(display_indices),
     )
 
     return lattice_parameters
@@ -212,6 +247,40 @@ def jax_spread_matrices(*args) -> jnp.ndarray:
 
 def get_self_interaction_indices(n):
     return list([list([i]) for i in range(n)])
+
+
+# may break n_list
+def swap_neighbor_index_lists(reorder_list: list, n_list: list):
+    assert type(n_list) is list
+    assert type(reorder_list) is list
+    assert len(n_list) == len(reorder_list)
+
+    n = len(n_list)
+
+    lookup_list = lookup_list_to_reorder_list(reorder_list)
+
+    new_list = [None] * n
+    for i in range(n):
+        list_to_insert = n_list[lookup_list[i]]
+
+        for j in range(len(list_to_insert)):
+            list_to_insert[j] = reorder_list[list_to_insert[j]]
+
+        new_list[i] = list_to_insert
+
+    return new_list
+
+
+def lookup_list_to_reorder_list(reorder_list: list):
+    assert type(reorder_list) is list
+
+    n = len(reorder_list)
+
+    lookup_list = [None] * n
+    for i in range(n):
+        lookup_list[reorder_list[i]] = i
+
+    return lookup_list
 
 
 if __name__ == "__main__":

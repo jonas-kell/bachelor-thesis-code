@@ -20,8 +20,10 @@ from helpers.neighbors import (
     hexagonal_lattice_get_nnn_indices,
 )
 
+from lattice_parameter_resolver import resolve_lattice_parameters, LatticeParameters
+
 point_distance = 0.1
-highlight_index = -1
+highlight_display_index = -1
 
 # Draw a point based on the x, y axis value.
 def draw_point(x, y, label="", width_x=1, width_y=1, c="#0000aa"):
@@ -36,33 +38,47 @@ def draw_point(x, y, label="", width_x=1, width_y=1, c="#0000aa"):
 # iterate over list of points to draw lattice
 def draw_lattice(
     coords,
-    n,
+    lattice_parameters: LatticeParameters,
     width_x=1,
     width_y=1,
-    nn_function=None,
-    nnn_function=None,
-    periodic_bounds=False,
 ):
-    global highlight_index
+    global highlight_display_index
+
+    print(lattice_parameters["display_indices"])
+    print(lattice_parameters["display_indices_lookup"])
+    print(lattice_parameters["self_interaction_indices"])
+    print(lattice_parameters["nn_interaction_indices"])
+    print(lattice_parameters["nnn_interaction_indices"])
 
     while True:
         init(coords, width_x, width_y)
 
-        if nn_function is None:
-            nn_indices = []
-        else:
-            nn_indices = nn_function(highlight_index, n, periodic_bounds)
+        for index in range(lattice_parameters["nr_sites"]):
 
-        if nnn_function is None:
-            nnn_indices = []
-        else:
-            nnn_indices = nnn_function(highlight_index, n, periodic_bounds)
+            display_index = lattice_parameters["display_indices_lookup"][index]
+            highlight_index = (
+                lattice_parameters["display_indices"][highlight_display_index]
+                if highlight_display_index >= 0
+                else -1
+            )
+            x = coords[display_index][1]
+            y = coords[display_index][2]
 
-        for index, x, y in coords:
+            nn_indices = (
+                lattice_parameters["nn_interaction_indices"][highlight_index]
+                if highlight_index >= 0
+                else []
+            )
+            nnn_indices = (
+                lattice_parameters["nnn_interaction_indices"][highlight_index]
+                if highlight_index >= 0
+                else []
+            )
+
             draw_point(
                 x,
                 y,
-                index,
+                index,  # label
                 width_x=width_x,
                 width_y=width_y,
                 c="#aa0000"
@@ -82,7 +98,7 @@ def init(coords, width_x, width_y):
     fig = plt.figure(figsize=(9 * width_x / width_y, 9))
 
     def onclick(event):
-        global highlight_index
+        global highlight_display_index
 
         ix, iy = event.xdata, event.ydata
 
@@ -100,8 +116,8 @@ def init(coords, width_x, width_y):
                 closest_x = x
                 closest_y = y
 
-        print("closest index: %d" % (closest_index))
-        highlight_index = closest_index
+        print("closest display index to highlight: %d" % (closest_index))
+        highlight_display_index = closest_index
 
         plt.close()  # "force redraw"
 
@@ -130,17 +146,18 @@ def coords_linear_lattice(n=1):
     return coords
 
 
-def draw_linear_lattice(size=1, periodic_bounds=False):
+def draw_linear_lattice(size=1, periodic_bounds=False, random_swaps=0):
     coords = coords_linear_lattice(n=size)
 
+    lattice_parameters = resolve_lattice_parameters(
+        size=size, shape="linear", periodic=periodic_bounds, random_swaps=random_swaps
+    )
+
     draw_lattice(
-        coords,
-        n=size,
+        coords=coords,
+        lattice_parameters=lattice_parameters,
         width_x=size,
         width_y=size / 2,
-        nn_function=linear_lattice_get_nn_indices,
-        nnn_function=linear_lattice_get_nnn_indices,
-        periodic_bounds=periodic_bounds,
     )
 
 
@@ -323,9 +340,9 @@ def cube_coordinates_to_cartesian_coordinates(q, r):
 
 
 if __name__ == "__main__":
-    # draw_linear_lattice(20, False)
-    draw_cubic_lattice(1, True)
-    draw_trigonal_square_lattice(1, True)
-    draw_trigonal_diamond_lattice(1, True)
-    draw_trigonal_hexagonal_lattice(1, True)
-    draw_hexagonal_lattice(1, True)
+    draw_linear_lattice(7, False, -1)
+    draw_cubic_lattice(1, True, 0)
+    draw_trigonal_square_lattice(1, True, 0)
+    draw_trigonal_diamond_lattice(1, True, 0)
+    draw_trigonal_hexagonal_lattice(1, True, 0)
+    draw_hexagonal_lattice(1, True, 0)
