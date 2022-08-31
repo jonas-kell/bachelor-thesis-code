@@ -56,6 +56,7 @@ class LatticeParameters(TypedDict):
     adjacency_matrices: AdjacencyMatrices
     display_indices: list
     display_indices_lookup: list
+    nr_random_swaps: int
 
 
 def resolve_lattice_parameters(
@@ -203,6 +204,7 @@ def resolve_lattice_parameters(
         ),
         display_indices=display_indices,
         display_indices_lookup=lookup_list_to_reorder_list(display_indices),
+        nr_random_swaps=random_swaps,
     )
 
     return lattice_parameters

@@ -135,6 +135,7 @@ def execute_computation(
     ],
     lattice_size: int,
     lattice_periodic: bool,
+    lattice_random_swaps: int,
     model_name: str,
     hamiltonian_J_parameter: float = -1.0,
     hamiltonian_h_parameter: float = -0.7,
@@ -151,7 +152,10 @@ def execute_computation(
     early_abort_var: float = -1.0,
 ):
     lattice_parameters = resolve_lattice_parameters(
-        shape=lattice_shape, size=lattice_size, periodic=lattice_periodic
+        shape=lattice_shape,
+        size=lattice_size,
+        periodic=lattice_periodic,
+        random_swaps=lattice_random_swaps,
     )
 
     if model_name in available_models:
@@ -185,6 +189,7 @@ if __name__ == "__main__":
         "lattice_shape": "linear",
         "lattice_size": 25,
         "lattice_periodic": True,
+        "lattice_random_swaps": 0,
         "model_name": "CNN",
         "hamiltonian_J_parameter": -1.0,
         "hamiltonian_h_parameter": -0.7,

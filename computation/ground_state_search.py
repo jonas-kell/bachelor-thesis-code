@@ -142,6 +142,7 @@ def execute_ground_state_search(
         "lattice_nr_sites": lattice_parameters["nr_sites"],
         "lattice_periodic": lattice_parameters["periodic"],
         "lattice_size": lattice_parameters["size"],
+        "lattice_nr_random_swaps": lattice_parameters["nr_random_swaps"],
         "hamiltonian_J_parameter": hamiltonian_J_parameter,
         "hamiltonian_h_parameter": hamiltonian_h_parameter,
         "n_samples": n_samples,
