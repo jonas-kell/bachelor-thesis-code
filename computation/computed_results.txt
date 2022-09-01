@@ -1,0 +1,14 @@
+size=8, shape="linear", periodic=True, random_swaps=0, J=-1, h=-0.7
+
+Numerical: The Eigenvalue is [-8.99827], therefore E/L = [-1.1247838]
+CNN: Step [  870/ 1000] E/L: -1.126706 Var(E)/L: 0.000739 time: 0.452183s
+Analytical: -1.127966767672878
+CNN from example code: 800 -1.1267290028226904 0.0008189748147274004
+
+
+size=10, shape="linear", periodic=True, random_swaps=0, J=1, h=-0.6
+
+Numerical: The Eigenvalue is [-10.923324], therefore E/L = [-1.0923324]
+CNN: Step [  485/ 1000] E/L: -1.091166 Var(E)/L: 0.005927 time: 0.568667s
+Analytical: -1.0923314569220257
+CNN from example code: 630 -1.091373155024706 0.0049791562953650035

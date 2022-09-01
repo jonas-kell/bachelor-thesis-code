@@ -2,7 +2,7 @@ import scipy
 import jVMC
 from hamiltonian import get_hamiltonian
 import numpy as np
-
+import time
 
 from lattice_parameter_resolver import resolve_lattice_parameters
 
@@ -42,22 +42,34 @@ def assemble_hamiltonian_in_eigenbasis(
     assert configurations.shape[2] == m
     assert configurations.shape[3] == L
 
-    hamiltonian = np.zeros((nr_states, nr_states), dtype=np.complex64)
+    data = np.zeros((nr_states * m,), dtype=np.complex64)
+    row = np.zeros((nr_states * m,))
+    col = np.zeros((nr_states * m,))
 
+    index = 0
     for i in range(nr_states):
         base_state_index = get_index_from_z_eigenstate(base_states[0, i])
 
         for j in range(m):
-            hamiltonian[
-                base_state_index, get_index_from_z_eigenstate(configurations[0, i, j])
-            ] = matrix_elements[0, i, j]
+            data[index] = matrix_elements[0, i, j]
+            row[index] = base_state_index
+            col[index] = get_index_from_z_eigenstate(configurations[0, i, j])
+
+            index += 1
+
+    hamiltonian = scipy.sparse.coo_array(
+        (data, (row, col)), shape=(nr_states, nr_states), dtype=np.complex64
+    )
+    hamiltonian.sum_duplicates()
 
     return hamiltonian
 
 
 if __name__ == "__main__":
+    start_time = time.time()
+
     lattice_parameters = resolve_lattice_parameters(
-        size=8, shape="linear", periodic=True, random_swaps=0
+        size=3, shape="linear", periodic=True, random_swaps=0
     )
     L = lattice_parameters["nr_sites"]
 
@@ -83,6 +95,8 @@ if __name__ == "__main__":
     # print(matrix_elements)                # the correspondung weight-factors to the result of applying the Hamiltonian to one base_state (correspond 1:1 with the "configurations" entries)
     # print(matrix_elements.shape)          # 1 x 2^L x m
 
+    print(f"Creation of the hamiltonian took {time.time()-start_time:.3f}s")
+    start_time = time.time()
     print(
         "Start to assemble the final matrix. This Code is very unoptimized, because its entirely written in python..."
     )
@@ -92,11 +106,14 @@ if __name__ == "__main__":
     )
 
     print(
-        "Matrix is assembled, start eigenvalue calculation... This may take EXTREMELY long"
+        f"The matrix conversion of the hamiltonian took {time.time()-start_time:.3f}s"
     )
+    start_time = time.time()
+    print("Matrix is assembled, start eigenvalue calculation... This may take long")
 
     eigenvalue = scipy.sparse.linalg.eigsh(
         A=eigenbasis_matrix, k=1, return_eigenvectors=False
     )
 
+    print(f"Eigenvalue calculation took {time.time()-start_time:.3f}s")
     print(f"The Eigenvalue is {eigenvalue}, therefore E/L = {eigenvalue/L}")
