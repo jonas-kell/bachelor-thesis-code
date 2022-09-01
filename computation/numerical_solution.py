@@ -1,6 +1,6 @@
 import scipy
 import jVMC
-from hamiltonian import get_hamiltonian
+from operators import get_hamiltonian
 import numpy as np
 import time
 

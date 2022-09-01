@@ -22,7 +22,12 @@ sys.path.append(os.path.abspath("./../structures"))
 
 from torch.utils.tensorboard import SummaryWriter
 from structures.lattice_parameter_resolver import LatticeParameters
-from hamiltonian import get_hamiltonian
+from operators import (
+    get_hamiltonian,
+    get_mag_x_operator,
+    get_mag_y_operator,
+    get_mag_z_operator,
+)
 
 
 def execute_ground_state_search(
@@ -75,6 +80,13 @@ def execute_ground_state_search(
         hamiltonian_J_parameter=hamiltonian_J_parameter,
         hamiltonian_h_parameter=hamiltonian_h_parameter,
     )
+
+    # operators to measure interesting observables
+    observables = {
+        "mag_x": get_mag_x_operator(lattice_parameters),
+        "mag_y": get_mag_y_operator(lattice_parameters),
+        "mag_z": get_mag_z_operator(lattice_parameters),
+    }
 
     # Set up sampler
     sampler = jVMC.sampler.MCSampler(
@@ -191,6 +203,13 @@ def execute_ground_state_search(
         writer.add_scalar("E/L", float(jax.numpy.real(tdvpEquation.ElocMean0) / L), n)
         writer.add_scalar("Var(E)/L", float(tdvpEquation.ElocVar0 / L), n)
         writer.add_scalar("time/s", float(processing_time), n)
+
+        # measure observables
+        obs = jVMC.util.measure(observables=observables, psi=psi, sampler=sampler)
+
+        writer.add_scalar("magnetization_x/L", float(obs["mag_x"]["mean"][0]), n)
+        writer.add_scalar("magnetization_y/L", float(obs["mag_y"]["mean"][0]), n)
+        writer.add_scalar("magnetization_z/L", float(obs["mag_z"]["mean"][0]), n)
 
         # write var milestones for hparam tracking
         var = float(tdvpEquation.ElocVar0 / L)

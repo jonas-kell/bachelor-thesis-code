@@ -36,3 +36,45 @@ def get_hamiltonian(
         )
 
     return hamiltonian
+
+
+def get_mag_x_operator(
+    lattice_parameters: LatticeParameters,
+):
+    L = lattice_parameters["nr_sites"]
+
+    operator = jVMC.operator.BranchFreeOperator()
+    for l in range(L):
+        operator.add(
+            jVMC.operator.scal_opstr(1 / L, (jVMC.operator.Sx(l),)),
+        )
+
+    return operator
+
+
+def get_mag_y_operator(
+    lattice_parameters: LatticeParameters,
+):
+    L = lattice_parameters["nr_sites"]
+
+    operator = jVMC.operator.BranchFreeOperator()
+    for l in range(L):
+        operator.add(
+            jVMC.operator.scal_opstr(1 / L, (jVMC.operator.Sy(l),)),
+        )
+
+    return operator
+
+
+def get_mag_z_operator(
+    lattice_parameters: LatticeParameters,
+):
+    L = lattice_parameters["nr_sites"]
+
+    operator = jVMC.operator.BranchFreeOperator()
+    for l in range(L):
+        operator.add(
+            jVMC.operator.scal_opstr(1 / L, (jVMC.operator.Sz(l),)),
+        )
+
+    return operator
