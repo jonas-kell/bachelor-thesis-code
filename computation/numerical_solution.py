@@ -42,25 +42,15 @@ def assemble_hamiltonian_in_eigenbasis(
     assert configurations.shape[2] == m
     assert configurations.shape[3] == L
 
-    data = np.zeros((nr_states * m,), dtype=np.complex64)
-    row = np.zeros((nr_states * m,))
-    col = np.zeros((nr_states * m,))
+    hamiltonian = scipy.sparse.dok_array((nr_states, nr_states), dtype=np.complex64)
 
-    index = 0
     for i in range(nr_states):
         base_state_index = get_index_from_z_eigenstate(base_states[0, i])
 
         for j in range(m):
-            data[index] = matrix_elements[0, i, j]
-            row[index] = base_state_index
-            col[index] = get_index_from_z_eigenstate(configurations[0, i, j])
-
-            index += 1
-
-    hamiltonian = scipy.sparse.coo_array(
-        (data, (row, col)), shape=(nr_states, nr_states), dtype=np.complex64
-    )
-    hamiltonian.sum_duplicates()
+            hamiltonian[
+                base_state_index, get_index_from_z_eigenstate(configurations[0, i, j])
+            ] += matrix_elements[0, i, j]
 
     return hamiltonian
 
@@ -69,7 +59,7 @@ if __name__ == "__main__":
     start_time = time.time()
 
     lattice_parameters = resolve_lattice_parameters(
-        size=3, shape="linear", periodic=True, random_swaps=0
+        size=6, shape="linear", periodic=True, random_swaps=0
     )
     L = lattice_parameters["nr_sites"]
 
@@ -112,7 +102,10 @@ if __name__ == "__main__":
     print("Matrix is assembled, start eigenvalue calculation... This may take long")
 
     eigenvalue = scipy.sparse.linalg.eigsh(
-        A=eigenbasis_matrix, k=1, return_eigenvectors=False
+        A=eigenbasis_matrix,
+        k=1,  # return the first eigenvalue.
+        return_eigenvectors=False,
+        sigma=-100,  # sigma "forces" that the smallest one is returend
     )
 
     print(f"Eigenvalue calculation took {time.time()-start_time:.3f}s")

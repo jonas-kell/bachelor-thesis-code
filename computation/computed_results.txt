@@ -1,6 +1,6 @@
 size=8, shape="linear", periodic=True, random_swaps=0, J=-1, h=-0.7
 
-Numerical: The Eigenvalue is [-8.99827], therefore E/L = [-1.1247838]
+Numerical: The Eigenvalue is [-9.023743], therefore E/L = [-1.1279678]
 CNN: Step [  870/ 1000] E/L: -1.126706 Var(E)/L: 0.000739 time: 0.452183s
 Analytical: -1.127966767672878
 CNN from example code: 800 -1.1267290028226904 0.0008189748147274004
