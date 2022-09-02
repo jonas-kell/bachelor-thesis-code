@@ -6,28 +6,17 @@ import flax.linen as nn
 import jax.numpy as jnp
 
 
-def complex_split_init(rng, shape):
-    const = jax.nn.initializers.constant(1, dtype=jnp.complex64)
-
-    result = const(rng, shape)
-    result = result.at[0].set(1 + 0j)
-    result = result.at[1].set(0 + 1j)
-
-    return result
-
-
 class CombineToComplexModule(nn.Module):
     """Marry the output of two real nets or two parts of one real net into one complex output"""
 
     def setup(self):
-        self.factors = self.param(
-            "factors",
-            complex_split_init,
-            (2,),
-        )
+        pass
+        # this had the real-complex converters also as learnable parameters.
+        # This caused a multitude of problems in the backpropagation, therefore this is now hardcoded and strict.
+        # The previous layers will need to pick up handling the total scaling and the ratio of real to complex
 
     def __call__(self, x_1, x_2):
-        return self.factors[0] * x_1 + self.factors[1] * x_2
+        return (1 + 0j) * x_1 + (0 + 1j) * x_2
 
 
 class CombineToComplexNet(nn.Module):
