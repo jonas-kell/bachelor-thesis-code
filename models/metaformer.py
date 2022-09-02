@@ -49,9 +49,7 @@ class Mlp(nn.Module):
     hidden_features: int
     out_features: int
     act_layer: Callable = nn.gelu
-    ansatz: Literal[
-        "single-real", "single-complex", "split-complex", "two-real"
-    ] = "single-real"
+    complex_values: bool = False
 
     def setup(self):
         self.fc1 = nn.Dense(
@@ -62,7 +60,7 @@ class Mlp(nn.Module):
                     bias_init=jax.nn.initializers.zeros,
                     dtype=global_defs.tCpx,
                 )
-                if self.ansatz == "single-complex"
+                if self.complex_values
                 else {}
             ),
         )
@@ -74,7 +72,7 @@ class Mlp(nn.Module):
                     bias_init=jax.nn.initializers.zeros,
                     dtype=global_defs.tCpx,
                 )
-                if self.ansatz == "single-complex"
+                if self.complex_values
                 else {}
             ),
         )
@@ -101,6 +99,7 @@ class Attention(nn.Module):
     num_heads: int = 3
     qkv_bias: bool = True
     mixing_symmetry: Literal["arbitrary", "symm_nn", "symm_nnn"] = "arbitrary"
+    complex_values: bool = False  # TODO
 
     def setup(self):
         head_dim = self.embed_dim // self.num_heads
@@ -150,6 +149,7 @@ class GraphMaskAttention(nn.Module):
 
     lattice_parameters: LatticeParameters
     graph_layer: Literal["symm_nn", "symm_nnn"] = "symm_nn"
+    complex_values: bool = False  # TODO
 
     def setup(self):
         self.factors = self.param("factors", nn.initializers.normal(), (3,))
@@ -216,6 +216,7 @@ class GraphMaskConvolution(nn.Module):
     lattice_parameters: LatticeParameters
     embed_dim: int
     graph_layer: Literal["symm_nn", "symm_nnn"] = "symm_nn"
+    complex_values: bool = False  # TODO
 
     def setup(self):
         self.factors = self.param(
@@ -258,30 +259,24 @@ class Block(nn.Module):
     mlp_ratio: float = 4.0
     act_layer: Callable = nn.gelu
     norm_layer: Callable = nn.LayerNorm
-    ansatz: Literal[
-        "single-real", "single-complex", "split-complex", "two-real"
-    ] = "single-real"
+    complex_values: bool = False
 
     def setup(self):
         mlp_hidden_dim = int(self.embed_dim * self.mlp_ratio)
 
         self.norm1 = self.norm_layer(
-            dtype=jnp.complex64 if self.ansatz == "single-complex" else jnp.float32,
-            param_dtype=jnp.complex64
-            if self.ansatz == "single-complex"
-            else jnp.float32,
+            dtype=jnp.complex64 if self.complex_values else jnp.float32,
+            param_dtype=jnp.complex64 if self.complex_values else jnp.float32,
         )
         self.norm2 = self.norm_layer(
-            dtype=jnp.complex64 if self.ansatz == "single-complex" else jnp.float32,
-            param_dtype=jnp.complex64
-            if self.ansatz == "single-complex"
-            else jnp.float32,
+            dtype=jnp.complex64 if self.complex_values else jnp.float32,
+            param_dtype=jnp.complex64 if self.complex_values else jnp.float32,
         )
         self.mlp = Mlp(
             hidden_features=mlp_hidden_dim,
             out_features=self.embed_dim,
             act_layer=self.act_layer,
-            ansatz=self.ansatz,
+            complex_values=self.complex_values,
         )
 
     def __call__(self, x):
@@ -300,6 +295,7 @@ class TokenMixer(nn.Module):
     lattice_parameters: LatticeParameters
     # structure info
     embed_dim: int
+    complex_values: bool = False
     # token mixing
     token_mixer: Literal[
         "attention",
@@ -320,6 +316,7 @@ class TokenMixer(nn.Module):
                 num_heads=self.num_heads,
                 qkv_bias=self.qkv_bias,
                 mixing_symmetry=self.mixing_symmetry,
+                complex_values=self.complex_values,
             )
 
         # ! pooling
@@ -344,6 +341,7 @@ class TokenMixer(nn.Module):
                 lattice_parameters=self.lattice_parameters,
                 graph_layer=self.mixing_symmetry,
                 embed_dim=self.embed_dim,
+                complex_values=self.complex_values,
             )
 
         else:
@@ -369,9 +367,7 @@ class SiteEmbed(nn.Module):
     embed_mode: Literal[
         "duplicate_spread", "duplicate_nn", "duplicate_nnn"
     ] = "duplicate_spread"
-    ansatz: Literal[
-        "single-real", "single-complex", "split-complex", "two-real"
-    ] = "single-real"
+    complex_values: bool = False
 
     def setup(self):
         self.dense_layer = nn.Dense(
@@ -382,7 +378,7 @@ class SiteEmbed(nn.Module):
                     bias_init=jax.nn.initializers.zeros,
                     dtype=global_defs.tCpx,
                 )
-                if self.ansatz == "single-complex"
+                if self.complex_values
                 else {}
             ),
         )
@@ -450,12 +446,15 @@ class Metaformer(nn.Module):
     ] = "single-real"
 
     def setup(self):
+        # get dtype
+        self.complex_values = self.ansatz == "single-complex"
+
         # Embed input into Metaformer-space
         self.site_embed = SiteEmbed(
             embed_dim=self.embed_dim,
             lattice_parameters=self.lattice_parameters,
             embed_mode=self.embed_mode,
-            ansatz=self.ansatz,
+            complex_values=self.complex_values,
         )
 
         # Blocks
@@ -470,11 +469,12 @@ class Metaformer(nn.Module):
                         mixing_symmetry=self.mixing_symmetry,
                         num_heads=self.num_heads,
                         qkv_bias=self.qkv_bias,
+                        complex_values=self.complex_values,
                     ),
                     mlp_ratio=self.mlp_ratio,
                     act_layer=self.act_layer,
                     norm_layer=self.norm_layer,
-                    ansatz=self.ansatz,
+                    complex_values=self.complex_values,
                 )
                 for i in range(self.depth)
             ]
@@ -482,10 +482,8 @@ class Metaformer(nn.Module):
 
         # Norm
         self.norm = self.norm_layer(
-            dtype=jnp.complex64 if self.ansatz == "single-complex" else jnp.float32,
-            param_dtype=jnp.complex64
-            if self.ansatz == "single-complex"
-            else jnp.float32,
+            dtype=jnp.complex64 if self.complex_values else jnp.float32,
+            param_dtype=jnp.complex64 if self.complex_values else jnp.float32,
         )
 
         # Pooling-dimension-reducing-head
