@@ -245,11 +245,13 @@ class GraphMaskConvolution(nn.Module):
     lattice_parameters: LatticeParameters
     embed_dim: int
     graph_layer: Literal["symm_nn", "symm_nnn"] = "symm_nn"
-    complex_values: bool = False  # TODO
+    complex_values: bool = False
 
     def setup(self):
         self.factors = self.param(
-            "factors", nn.initializers.normal(), (3, self.embed_dim)
+            "factors",
+            complex_init if self.complex_values else nn.initializers.normal(),
+            (3, self.embed_dim),
         )
 
     def __call__(self, x):
