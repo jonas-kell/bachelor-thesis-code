@@ -388,7 +388,7 @@ class Metaformer(nn.Module):
     num_heads: int = 6
     qkv_bias: bool = True
     ansatz: Literal[
-        "single-real", "single-complex", "single-split", "two-real"
+        "single-real", "single-complex", "split-complex", "two-real"
     ] = "single-real"
 
     def setup(self):

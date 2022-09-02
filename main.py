@@ -149,7 +149,7 @@ def execute_computation(
     num_heads: int = 3,
     mlp_ratio: int = 2,
     ansatz: Literal[
-        "single-real", "single-complex", "single-split", "two-real"
+        "single-real", "single-complex", "split-complex", "two-real"
     ] = "single-real",
     early_abort_var: float = -1.0,
 ):

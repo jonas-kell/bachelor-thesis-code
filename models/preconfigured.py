@@ -12,7 +12,7 @@ from split_net import CombineToComplexNet
 def cnn(
     inputs,
     ansatz: Literal[
-        "single-real", "single-complex", "single-split", "two-real"
+        "single-real", "single-complex", "split-complex", "two-real"
     ] = "single-real",
 ) -> nn.Module:
     def myActFun(x):
@@ -46,7 +46,7 @@ def cnn(
             periodicBoundary=True,
             actFun=(myActFun,),
         )
-    elif ansatz == "single-split":
+    elif ansatz == "split-complex":
         net1 = jVMC.nets.CNN(
             F=(inputs,),
             channels=(channels // 2,),  # halfsize real net
@@ -70,7 +70,7 @@ def cnn(
 
 def rbm(
     ansatz: Literal[
-        "single-real", "single-complex", "single-split", "two-real"
+        "single-real", "single-complex", "split-complex", "two-real"
     ] = "single-real",
 ) -> nn.Module:
 
@@ -85,7 +85,7 @@ def rbm(
         )  # halfsize real net, as this later gets duplicated
     elif ansatz == "single-complex":
         net = jVMC.nets.CpxRBM(numHidden=hidden, bias=bias)
-    elif ansatz == "single-split":
+    elif ansatz == "split-complex":
         net1 = jVMC.nets.RBM(numHidden=hidden // 2, bias=bias)  # halfsize real net
         net2 = jVMC.nets.RBM(numHidden=hidden // 2, bias=bias)  # halfsize real net
         net = CombineToComplexNet(net1, net2)

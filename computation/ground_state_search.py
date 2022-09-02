@@ -42,7 +42,7 @@ def execute_ground_state_search(
             int,  # embed_dim
             int,  # num_heads
             int,  # mlp_ratio
-            Literal["single-real", "single-complex", "single-split", "two-real"],
+            Literal["single-real", "single-complex", "split-complex", "two-real"],
         ],
         nn.Module,
     ],
@@ -57,7 +57,7 @@ def execute_ground_state_search(
     num_heads: int = 3,
     mlp_ratio: int = 2,
     ansatz: Literal[
-        "single-real", "single-complex", "single-split", "two-real"
+        "single-real", "single-complex", "split-complex", "two-real"
     ] = "single-real",
     early_abort_var: float = -1.0,
 ):
@@ -70,7 +70,7 @@ def execute_ground_state_search(
 
     # get model + Variational wave function
     seed = 1234
-    if ansatz in ["single-real", "single-complex", "single-split"]:
+    if ansatz in ["single-real", "single-complex", "split-complex"]:
         model = model_fn(
             lattice_parameters, depth, embed_dim, num_heads, mlp_ratio, ansatz
         )
@@ -134,7 +134,7 @@ def execute_ground_state_search(
     ansatz_short_names = {
         "single-real": "sr",
         "single-complex": "sc",
-        "single-split": "ss",
+        "split-complex": "spc",
         "two-real": "tr",
     }
 
