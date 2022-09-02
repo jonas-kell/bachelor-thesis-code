@@ -7,7 +7,7 @@ import flax.linen as nn
 import jVMC.nets.activation_functions as act_funs
 from jax.lax import stop_gradient
 
-from typing import Callable, Literal, Callable
+from typing import Callable, Literal
 
 from structures.lattice_parameter_resolver import LatticeParameters
 
@@ -17,6 +17,8 @@ import jVMC
 from functools import partial
 
 complex_init = partial(jVMC.nets.initializers.cplx_init, dtype=jnp.complex64)
+
+from split_net import CombineToComplexModule
 
 
 class Identity(nn.Module):
@@ -426,6 +428,16 @@ class Metaformer(nn.Module):
         # Pooling-dimension-reducing-head
         self.head = AveragingConvolutionHead()
 
+        # Assemble complex number from result
+        if self.ansatz == "split-complex":
+            self.combiner = CombineToComplexModule()
+
+            if self.embed_dim % 2 != 0:
+                raise RuntimeError("Split-Complex Mode for now requires even embed-dim")
+
+        if self.ansatz == "single-complex":
+            raise RuntimeError("Single-Complex Ansatz not supported for Metaformer")
+
     def __call__(self, x):
         x = self.site_embed(x)
 
@@ -435,8 +447,27 @@ class Metaformer(nn.Module):
 
         x = self.head(x)
 
-        # activation functions to convert to scalar energy output
-        return jnp.sum(act_funs.log_cosh(x))
+        # different behaviour, depending on the ansatz, the net is used in
+        if self.ansatz in [
+            "single-real",
+            "two-real",
+        ]:
+            # activation functions to convert to scalar energy output
+            return jnp.sum(act_funs.log_cosh(x))
+
+        # first half of result gets used for the real part, second part for the imaginary one
+        elif self.ansatz == "split-complex":
+            x1 = x[0 : self.embed_dim // 2]
+            x2 = x[self.embed_dim // 2 :]
+
+            x1 = jnp.sum(act_funs.log_cosh(x1))
+            x2 = jnp.sum(act_funs.log_cosh(x2))
+
+            x = self.combiner(x1, x2)
+
+            return x
+        else:
+            raise RuntimeError("Impossible ansatz")
 
     # as the outermost module contains lists/dicts as parameters (e.g. lattice_parameters), it is not hashable.
     # this could cause problems if more than one instance of an unhashable modlue is used. But here it should be fine for now
