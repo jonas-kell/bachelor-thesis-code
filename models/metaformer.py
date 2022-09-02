@@ -141,6 +141,7 @@ class Attention(nn.Module):
             else GraphMaskAttention(
                 lattice_parameters=self.lattice_parameters,
                 graph_layer=self.mixing_symmetry,
+                complex_values=self.complex_values,
             )
         )
 
@@ -173,10 +174,14 @@ class GraphMaskAttention(nn.Module):
 
     lattice_parameters: LatticeParameters
     graph_layer: Literal["symm_nn", "symm_nnn"] = "symm_nn"
-    complex_values: bool = False  # TODO
+    complex_values: bool = False
 
     def setup(self):
-        self.factors = self.param("factors", nn.initializers.normal(), (3,))
+        self.factors = self.param(
+            "factors",
+            complex_init if self.complex_values else nn.initializers.normal(),
+            (3,),
+        )
 
     def __call__(self, x):
         matrix = (
