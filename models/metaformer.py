@@ -99,17 +99,41 @@ class Attention(nn.Module):
     num_heads: int = 3
     qkv_bias: bool = True
     mixing_symmetry: Literal["arbitrary", "symm_nn", "symm_nnn"] = "arbitrary"
-    complex_values: bool = False  # TODO
+    complex_values: bool = False
 
     def setup(self):
         head_dim = self.embed_dim // self.num_heads
         self.scale = head_dim**-0.5
 
         # in: self.embed_dim;  out: self.embed_dim * 3
-        self.qkv = nn.Dense(self.embed_dim * 3, use_bias=self.qkv_bias)
+        self.qkv = nn.Dense(
+            self.embed_dim * 3,
+            use_bias=self.qkv_bias,
+            **(  # complex init if wanted. Else default (real) init
+                init_fn_args(
+                    kernel_init=jVMC.nets.initializers.cplx_init,
+                    bias_init=jax.nn.initializers.zeros,
+                    dtype=global_defs.tCpx,
+                )
+                if self.complex_values
+                else {}
+            ),
+        )
 
         # in: self.embed_dim;  out: self.embed_dim
-        self.proj = nn.Dense(self.embed_dim, use_bias=True)
+        self.proj = nn.Dense(
+            self.embed_dim,
+            use_bias=True,
+            **(  # complex init if wanted. Else default (real) init
+                init_fn_args(
+                    kernel_init=jVMC.nets.initializers.cplx_init,
+                    bias_init=jax.nn.initializers.zeros,
+                    dtype=global_defs.tCpx,
+                )
+                if self.complex_values
+                else {}
+            ),
+        )
 
         self.graph_projection = (
             Identity()  # arbitrary lets this behave as a Transformer, not a Graph-Transformer
