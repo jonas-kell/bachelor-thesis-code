@@ -13,6 +13,11 @@ from structures.lattice_parameter_resolver import LatticeParameters
 
 from jax.experimental.host_callback import id_print
 
+import jVMC
+from functools import partial
+
+complex_init = partial(jVMC.nets.initializers.cplx_init, dtype=jnp.complex64)
+
 
 class Identity(nn.Module):
     """Simple Identity Operator"""

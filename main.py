@@ -41,7 +41,7 @@ sys.path.append(os.path.abspath("./computation"))
 from computation.ground_state_search import execute_ground_state_search
 
 sys.path.append(os.path.abspath("./models"))
-from models.preconfigured import cnn, complexRBM
+from models.preconfigured import cnn, rbm
 from models.metaformer import (
     transformer,
     graph_transformer_nn,
@@ -59,9 +59,11 @@ tensorboard_folder_path = "/media/jonas/69B577D0C4C25263/MLData/tensorboard_tras
 # add custom configurations in this dict
 available_models = {
     "CNN": lambda lattice_parameters, depth, embed_dim, num_heads, mlp_ratio, ansatz: cnn(  # ignore graph specific params
-        lattice_parameters["nr_sites"]
+        lattice_parameters["nr_sites"], ansatz
     ),
-    "RBM": lambda lattice_parameters, depth, embed_dim, num_heads, mlp_ratio, ansatz: complexRBM(),  # ignore graph specific params
+    "RBM": lambda lattice_parameters, depth, embed_dim, num_heads, mlp_ratio, ansatz: rbm(
+        ansatz
+    ),  # ignore graph specific params
     "TF": lambda lattice_parameters, depth, embed_dim, num_heads, mlp_ratio, ansatz: transformer(
         lattice_parameters=lattice_parameters,
         depth=depth,

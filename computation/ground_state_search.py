@@ -68,11 +68,23 @@ def execute_ground_state_search(
         f"We calculate the '{lattice_parameters['shape_name']}' lattice of size {lattice_parameters['size']} which means it has {L} lattice-sites. The boundary condition is {'periodic' if lattice_parameters['periodic'] else 'Non-periodic'}"
     )
 
-    # get model
-    model = model_fn(lattice_parameters, depth, embed_dim, num_heads, mlp_ratio, ansatz)
-
-    # Variational wave function
-    psi = jVMC.vqs.NQS(model, seed=1234, batchSize=nqs_batch_size)
+    # get model + Variational wave function
+    seed = 1234
+    if ansatz in ["single-real", "single-complex", "single-split"]:
+        model = model_fn(
+            lattice_parameters, depth, embed_dim, num_heads, mlp_ratio, ansatz
+        )
+        psi = jVMC.vqs.NQS(model, seed=seed, batchSize=nqs_batch_size)
+    elif ansatz == "two-real":
+        model1 = model_fn(
+            lattice_parameters, depth, embed_dim, num_heads, mlp_ratio, ansatz
+        )
+        model2 = model_fn(
+            lattice_parameters, depth, embed_dim, num_heads, mlp_ratio, ansatz
+        )
+        psi = jVMC.vqs.NQS((model1, model2), seed=seed, batchSize=nqs_batch_size)
+    else:
+        raise RuntimeError(f"Ansatz '{ansatz}' ist not supported")
 
     # Set up hamiltonian
     hamiltonian = get_hamiltonian(
@@ -106,7 +118,11 @@ def execute_ground_state_search(
 
     # Set up TDVP
     tdvpEquation = jVMC.util.tdvp.TDVP(
-        sampler, rhsPrefactor=1.0, svdTol=1e-8, diagonalShift=10, makeReal="real"
+        sampler,
+        rhsPrefactor=1.0,
+        svdTol=1e-8,
+        diagonalShift=10,
+        makeReal="real",  # as we perform ground-state-search, this has to be real, not "imag". Even for complex networks
     )
 
     # ODE integrator
@@ -115,12 +131,20 @@ def execute_ground_state_search(
     # Setup tensorboard Summary Writer
     flush_secs = 2
 
+    ansatz_short_names = {
+        "single-real": "sr",
+        "single-complex": "sc",
+        "single-split": "ss",
+        "two-real": "tr",
+    }
+
     run_date = datetime.datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
     run_name = (
         lattice_parameters["shape_name"]
         + f"({lattice_parameters['size']},{lattice_parameters['nr_sites']},{'p' if lattice_parameters['periodic']else 'np'},{lattice_parameters['nr_random_swaps']})"
         + "_with_"
         + model_name
+        + f"({ansatz_short_names[ansatz]})"
         + "_at_"
         + run_date
     )
