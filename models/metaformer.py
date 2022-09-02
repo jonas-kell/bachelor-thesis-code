@@ -6,6 +6,9 @@ import flax
 import flax.linen as nn
 import jVMC.nets.activation_functions as act_funs
 from jax.lax import stop_gradient
+from jVMC.nets.initializers import init_fn_args
+import jVMC.global_defs as global_defs
+import jax
 
 from typing import Callable, Literal
 
@@ -46,10 +49,35 @@ class Mlp(nn.Module):
     hidden_features: int
     out_features: int
     act_layer: Callable = nn.gelu
+    ansatz: Literal[
+        "single-real", "single-complex", "split-complex", "two-real"
+    ] = "single-real"
 
     def setup(self):
-        self.fc1 = nn.Dense(self.hidden_features)
-        self.fc2 = nn.Dense(self.out_features)
+        self.fc1 = nn.Dense(
+            self.hidden_features,
+            **(  # complex init if wanted. Else default (real) init
+                init_fn_args(
+                    kernel_init=jVMC.nets.initializers.cplx_init,
+                    bias_init=jax.nn.initializers.zeros,
+                    dtype=global_defs.tCpx,
+                )
+                if self.ansatz == "single-complex"
+                else {}
+            ),
+        )
+        self.fc2 = nn.Dense(
+            self.out_features,
+            **(  # complex init if wanted. Else default (real) init
+                init_fn_args(
+                    kernel_init=jVMC.nets.initializers.cplx_init,
+                    bias_init=jax.nn.initializers.zeros,
+                    dtype=global_defs.tCpx,
+                )
+                if self.ansatz == "single-complex"
+                else {}
+            ),
+        )
 
     def __call__(self, x):
         x = self.fc1(x)
@@ -230,16 +258,30 @@ class Block(nn.Module):
     mlp_ratio: float = 4.0
     act_layer: Callable = nn.gelu
     norm_layer: Callable = nn.LayerNorm
+    ansatz: Literal[
+        "single-real", "single-complex", "split-complex", "two-real"
+    ] = "single-real"
 
     def setup(self):
         mlp_hidden_dim = int(self.embed_dim * self.mlp_ratio)
 
-        self.norm1 = self.norm_layer()
-        self.norm2 = self.norm_layer()
+        self.norm1 = self.norm_layer(
+            dtype=jnp.complex64 if self.ansatz == "single-complex" else jnp.float32,
+            param_dtype=jnp.complex64
+            if self.ansatz == "single-complex"
+            else jnp.float32,
+        )
+        self.norm2 = self.norm_layer(
+            dtype=jnp.complex64 if self.ansatz == "single-complex" else jnp.float32,
+            param_dtype=jnp.complex64
+            if self.ansatz == "single-complex"
+            else jnp.float32,
+        )
         self.mlp = Mlp(
             hidden_features=mlp_hidden_dim,
             out_features=self.embed_dim,
             act_layer=self.act_layer,
+            ansatz=self.ansatz,
         )
 
     def __call__(self, x):
@@ -327,9 +369,23 @@ class SiteEmbed(nn.Module):
     embed_mode: Literal[
         "duplicate_spread", "duplicate_nn", "duplicate_nnn"
     ] = "duplicate_spread"
+    ansatz: Literal[
+        "single-real", "single-complex", "split-complex", "two-real"
+    ] = "single-real"
 
     def setup(self):
-        self.dense_layer = nn.Dense(self.embed_dim)
+        self.dense_layer = nn.Dense(
+            self.embed_dim,
+            **(  # complex init if wanted. Else default (real) init
+                init_fn_args(
+                    kernel_init=jVMC.nets.initializers.cplx_init,
+                    bias_init=jax.nn.initializers.zeros,
+                    dtype=global_defs.tCpx,
+                )
+                if self.ansatz == "single-complex"
+                else {}
+            ),
+        )
 
     def __call__(self, x):
         # Go from 0/1 representation to 1/-1 (needed, because 0 represents no interaction in 'duplicate_...')
@@ -399,6 +455,7 @@ class Metaformer(nn.Module):
             embed_dim=self.embed_dim,
             lattice_parameters=self.lattice_parameters,
             embed_mode=self.embed_mode,
+            ansatz=self.ansatz,
         )
 
         # Blocks
@@ -417,13 +474,19 @@ class Metaformer(nn.Module):
                     mlp_ratio=self.mlp_ratio,
                     act_layer=self.act_layer,
                     norm_layer=self.norm_layer,
+                    ansatz=self.ansatz,
                 )
                 for i in range(self.depth)
             ]
         )
 
         # Norm
-        self.norm = self.norm_layer()
+        self.norm = self.norm_layer(
+            dtype=jnp.complex64 if self.ansatz == "single-complex" else jnp.float32,
+            param_dtype=jnp.complex64
+            if self.ansatz == "single-complex"
+            else jnp.float32,
+        )
 
         # Pooling-dimension-reducing-head
         self.head = AveragingConvolutionHead()
@@ -435,10 +498,8 @@ class Metaformer(nn.Module):
             if self.embed_dim % 2 != 0:
                 raise RuntimeError("Split-Complex Mode for now requires even embed-dim")
 
-        if self.ansatz == "single-complex":
-            raise RuntimeError("Single-Complex Ansatz not supported for Metaformer")
-
     def __call__(self, x):
+        # print(x)
         x = self.site_embed(x)
 
         x = self.blocks(x)
@@ -466,6 +527,9 @@ class Metaformer(nn.Module):
             x = self.combiner(x1, x2)
 
             return x
+        elif self.ansatz == "single-complex":
+            # activation function may not have definition holes because complex values
+            return jnp.sum(act_funs.poly6(x))
         else:
             raise RuntimeError("Impossible ansatz")
 
