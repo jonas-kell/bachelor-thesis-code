@@ -16,7 +16,7 @@ class CombineToComplexModule(nn.Module):
         # The previous layers will need to pick up handling the total scaling and the ratio of real to complex
 
     def __call__(self, x_1, x_2):
-        return (1 + 0j) * x_1 + (0 + 1j) * x_2
+        return jax.lax.complex(x_1, x_2)
 
 
 class CombineToComplexNet(nn.Module):
