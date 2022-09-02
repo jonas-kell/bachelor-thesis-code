@@ -238,11 +238,10 @@ def execute_ground_state_search(
         if n % 10 == 0:
             # measure QuantumGeometricTensor/QuantumFisherMatrix
             qgt = np.array(tdvpEquation.get_spectrum())
-
             median = np.median(qgt)
             variance = np.var(qgt)
-            minimum = median - 1.5 * variance
-            maximum = median + 1.5 * variance
+            minimum = median - max(1.5 * variance, 0.5)
+            maximum = median + max(1.5 * variance, 0.5)
 
             # cleanup data, because last number is always massive outlier
             qgt = qgt[(qgt >= minimum) & (qgt <= maximum)]
