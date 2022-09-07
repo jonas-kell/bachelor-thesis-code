@@ -141,12 +141,26 @@ def execute_ground_state_search(
     run_date = datetime.datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
     run_name = (
         lattice_parameters["shape_name"]
-        + f"({lattice_parameters['size']},{lattice_parameters['nr_sites']},{'p' if lattice_parameters['periodic']else 'np'},{lattice_parameters['nr_random_swaps']})"
-        + "_with_"
+        + f" ({lattice_parameters['size']},{lattice_parameters['nr_sites']},{'p' if lattice_parameters['periodic']else 'np'},{lattice_parameters['nr_random_swaps']})"
+        + " "
         + model_name
         + f"({ansatz_short_names[ansatz]})"
-        + "_at_"
-        + run_date
+        + (
+            f"(dp: {depth}, ed: {embed_dim}, nh: {num_heads}, mr: {mlp_ratio})"
+            if model_name
+            in [
+                "TF",
+                "GF-NN",
+                "GF-NNN",
+                "GP-NN",
+                "GP-NNN",
+                "GC-NN",
+                "GC-NNN",
+            ]
+            else ""
+        )
+        + f" -- J: {hamiltonian_J_parameter:.1f}, h: {hamiltonian_h_parameter:.1f} "
+        + f"[{run_date}]"
     )
     tensorboard_folder = os.path.join(tensorboard_folder_path, run_name)
 
