@@ -17,6 +17,7 @@ import os
 import sys
 import time
 import numpy as np
+import traceback
 
 sys.path.append(os.path.abspath("./../structures"))
 
@@ -250,10 +251,12 @@ def execute_ground_state_search(
         writer.add_scalar("magnetization_z/L", float(obs["mag_z"]["mean"][0]), n)
 
         if n % 10 == 0:
-            # measure QuantumGeometricTensor/QuantumFisherMatrix
-            qgt = np.log(np.array(tdvpEquation.get_spectrum()))
-
-            writer.add_histogram("quantum_fisher_matrix", qgt, n, bins=20)
+            try:
+                # measure QuantumGeometricTensor/QuantumFisherMatrix
+                qgt = np.log(np.array(tdvpEquation.get_spectrum()))
+                writer.add_histogram("quantum_fisher_matrix", qgt, n, bins=20)
+            except Exception as exc:  # sometimes this generates nans.
+                print(traceback.format_exc())
 
         # write var milestones for hparam tracking
         var = float(tdvpEquation.ElocVar0 / L)
