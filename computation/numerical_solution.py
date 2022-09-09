@@ -1,3 +1,4 @@
+from shutil import which
 import scipy
 import jVMC
 from operators import get_hamiltonian
@@ -36,7 +37,7 @@ def assemble_hamiltonian_in_eigenbasis(
     max_bits = 8 * 4  # needs to be multiple of 8 and not more than 32
     assert L <= max_bits
 
-    print(f"Need to convert {nr_states} states")
+    print(f"Need to convert {nr_states} states, {L} lattice sites")
 
     base_states = np.array(base_states[0])
     configurations = np.array(configurations[0])
@@ -78,12 +79,12 @@ if __name__ == "__main__":
     start_time = time.time()
 
     lattice_parameters = resolve_lattice_parameters(
-        size=10, shape="linear", periodic=True, random_swaps=-1
+        size=13, shape="linear", periodic=True, random_swaps=-1
     )
     L = lattice_parameters["nr_sites"]
 
-    hamiltonian_J_parameter = 1.0
-    hamiltonian_h_parameter = 0.6
+    hamiltonian_J_parameter = -1.0
+    hamiltonian_h_parameter = 3.6
 
     hamiltonian = get_hamiltonian(
         lattice_parameters=lattice_parameters,
@@ -118,7 +119,10 @@ if __name__ == "__main__":
         f"The matrix conversion of the hamiltonian took {time.time()-start_time:.3f}s"
     )
     start_time = time.time()
-    print("Matrix is assembled, start eigenvalue calculation... This may take long")
+    print(
+        "Matrix is assembled, start eigenvalue calculation... This may take long \n",
+        "(13 Lattice sites takes about 3 minutes, everything above probably not feasable)",
+    )
 
     eigenvalue = scipy.sparse.linalg.eigsh(
         A=eigenbasis_matrix,
