@@ -7,15 +7,6 @@ import time
 from lattice_parameter_resolver import resolve_lattice_parameters
 
 
-def get_index_from_z_eigenstate(eigenstate: list):
-    index = 0
-
-    for i, spin in enumerate(eigenstate):
-        index += spin << i
-
-    return index
-
-
 def assemble_hamiltonian_in_eigenbasis(
     base_states: list,  # 1 x 2^L x L
     matrix_elements: list,  # 1 x 2^L x m
@@ -42,15 +33,43 @@ def assemble_hamiltonian_in_eigenbasis(
     assert configurations.shape[2] == m
     assert configurations.shape[3] == L
 
-    hamiltonian = scipy.sparse.dok_array((nr_states, nr_states), dtype=np.complex64)
+    max_bits = 8 * 4  # needs to be multiple of 8 and not more than 32
+    assert L <= max_bits
 
-    for i in range(nr_states):
-        base_state_index = get_index_from_z_eigenstate(base_states[0, i])
+    print(f"Need to convert {nr_states} states")
 
-        for j in range(m):
-            hamiltonian[
-                base_state_index, get_index_from_z_eigenstate(configurations[0, i, j])
-            ] += matrix_elements[0, i, j]
+    base_states = np.array(base_states[0])
+    configurations = np.array(configurations[0])
+    values = np.array(matrix_elements[0])
+
+    print(f"Converting indicees for base states")
+    # convert to 32 bit number. This is not entirely correct depending on the endianness of the computer therefore [:, ::-1] reshapes them according to MY cpus endianness. this may break on other systems
+    base_state_indicees = np.packbits(
+        np.pad(base_states, ((0, 0), (max_bits - L, 0)), mode="constant").reshape(
+            -1, max_bits // 8, 8
+        )[:, ::-1]
+    ).view(np.uint32)
+
+    print(f"Spreading base state indicees")
+    base_state_indicees = np.repeat(base_state_indicees, m)
+
+    print(f"Converting indicees for configurations")
+    configurations_indicees = np.packbits(
+        np.pad(
+            configurations, ((0, 0), (0, 0), (max_bits - L, 0)), mode="constant"
+        ).reshape(-1, max_bits // 8, 8)[:, ::-1]
+    ).view(np.uint32)
+
+    print(f"Reshapig values")
+    values = values.reshape(-1)
+
+    print(f"Assembling scipy sparse matrix")
+    hamiltonian = scipy.sparse.coo_matrix(
+        (values, (base_state_indicees, configurations_indicees)),
+        (nr_states, nr_states),
+        dtype=np.complex64,
+    )
+    hamiltonian.sum_duplicates()
 
     return hamiltonian
 
@@ -59,12 +78,12 @@ if __name__ == "__main__":
     start_time = time.time()
 
     lattice_parameters = resolve_lattice_parameters(
-        size=6, shape="linear", periodic=True, random_swaps=0
+        size=10, shape="linear", periodic=True, random_swaps=-1
     )
     L = lattice_parameters["nr_sites"]
 
-    hamiltonian_J_parameter = -1.0
-    hamiltonian_h_parameter = -0.7
+    hamiltonian_J_parameter = 1.0
+    hamiltonian_h_parameter = 0.6
 
     hamiltonian = get_hamiltonian(
         lattice_parameters=lattice_parameters,
