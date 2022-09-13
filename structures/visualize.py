@@ -106,7 +106,7 @@ def draw_lattice(
                 draw_svg_point(
                     svg,
                     x,
-                    y,
+                    bounds_max[1] + bounds_min[1] - y,
                     index,  # label
                     width_x=width_x,
                     width_y=width_y,
