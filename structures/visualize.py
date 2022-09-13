@@ -27,19 +27,19 @@ def draw_point(x, y, label="", width_x=1, width_y=1, c="#0000aa"):
     )
 
 
-def draw_svg_point(svg, x, y, label="", width_x=1, width_y=1, c="#0000aa"):
+def draw_svg_point(svg, x, y, label="", vb_width_x=1, vb_width_y=1, c="#0000aa"):
     svg.write(
         f"""    <g>
         <ellipse
             style="fill:{c};stroke-width:0.8"
             cx="{x}"
             cy="{y}"
-            rx="{0.05* point_distance}"
-            ry="{0.05* point_distance}" />
+            rx="{0.25 * point_distance * max(vb_width_x, vb_width_y)}"
+            ry="{0.25 * point_distance * max(vb_width_x, vb_width_y)}" />
         <text
             transform="scale(1)"
-            style="text-anchor: middle;alignment-baseline: central;font-size:{0.25 * point_distance};font-family:'Linux Libertine O';white-space:pre;fill:#000000;stroke-width:4">
-            <tspan x="{x}" y="{y+0.23* point_distance}">{str(label)}</tspan>
+            style="text-anchor: middle;alignment-baseline: central;font-size:{0.75 * point_distance * max(vb_width_x, vb_width_y)};font-family:'Linux Libertine O';white-space:pre;fill:#000000;stroke-width:4">
+            <tspan x="{x}" y="{y + 0.72 * point_distance * max(vb_width_x, vb_width_y)}">{str(label)}</tspan>
         </text>
     </g>
 """
@@ -63,13 +63,18 @@ def draw_lattice(
         bounds_min = bounds_test.min(axis=0)
         bounds_max = bounds_test.max(axis=0)
 
+        view_box_x = bounds_min[0] - point_distance / 2
+        view_box_y = bounds_min[1] - point_distance / 2
+        view_box_width = bounds_max[0] - bounds_min[0] + point_distance
+        view_box_height = bounds_max[1] - bounds_min[1] + point_distance * 1.25
+
         svg.write(
             f"""<?xml version="1.0" encoding="UTF-8"?>
 
 <svg
    width="{int(svg_size_in_mm * width_x / width_y)}mm"
    height="{svg_size_in_mm}mm"
-   viewBox="{f"{bounds_min[0]-point_distance/2} {bounds_min[1]-point_distance/2} {bounds_max[0]-bounds_min[0]+point_distance} {bounds_max[1]-bounds_min[1]+point_distance}"}"
+   viewBox="{f"{view_box_x} {view_box_y} {view_box_width} {view_box_height}"}"
    version="1.1"
    id="svg5"
    xmlns="http://www.w3.org/2000/svg"
@@ -108,8 +113,8 @@ def draw_lattice(
                     x,
                     bounds_max[1] + bounds_min[1] - y,
                     index,  # label
-                    width_x=width_x,
-                    width_y=width_y,
+                    vb_width_x=view_box_width,
+                    vb_width_y=view_box_height,
                     c="#aa0000"
                     if index == highlight_index
                     else (
