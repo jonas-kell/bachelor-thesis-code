@@ -28,18 +28,19 @@ def draw_point(x, y, label="", width_x=1, width_y=1, c="#0000aa"):
 
 
 def draw_svg_point(svg, x, y, label="", vb_width_x=1, vb_width_y=1, c="#0000aa"):
+    scale_factor = 1
     svg.write(
         f"""    <g>
         <ellipse
             style="fill:{c};stroke-width:0.8"
             cx="{x}"
             cy="{y}"
-            rx="{0.25 * point_distance * max(vb_width_x, vb_width_y)}"
-            ry="{0.25 * point_distance * max(vb_width_x, vb_width_y)}" />
+            rx="{0.20 * point_distance * max(vb_width_x, vb_width_y) * scale_factor}"
+            ry="{0.20 * point_distance * max(vb_width_x, vb_width_y) * scale_factor}" />
         <text
             transform="scale(1)"
-            style="text-anchor: middle;alignment-baseline: central;font-size:{0.75 * point_distance * max(vb_width_x, vb_width_y)};font-family:'Linux Libertine O';white-space:pre;fill:#000000;stroke-width:4">
-            <tspan x="{x}" y="{y + 0.72 * point_distance * max(vb_width_x, vb_width_y)}">{str(label)}</tspan>
+            style="text-anchor: middle;alignment-baseline: central;font-size:{0.75 * point_distance * max(vb_width_x, vb_width_y) * scale_factor};font-family:'Linux Libertine O';white-space:pre;fill:#000000;stroke-width:4">
+            <tspan x="{x}" y="{y + 0.72 * point_distance * max(vb_width_x, vb_width_y) * scale_factor}">{str(label)}</tspan>
         </text>
     </g>
 """
