@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
 import math
+import time
+import numpy as np
 
 from helpers.neighbors import (
     trigonal_hexagonal_nr_lattice_sites,
@@ -12,6 +14,8 @@ from lattice_parameter_resolver import resolve_lattice_parameters, LatticeParame
 
 point_distance = 0.1
 highlight_display_index = -1
+svg_size_in_mm = 60
+
 
 # Draw a point based on the x, y axis value.
 def draw_point(x, y, label="", width_x=1, width_y=1, c="#0000aa"):
@@ -23,14 +27,55 @@ def draw_point(x, y, label="", width_x=1, width_y=1, c="#0000aa"):
     )
 
 
+def draw_svg_point(svg, x, y, label="", width_x=1, width_y=1, c="#0000aa"):
+    svg.write(
+        f"""    <g>
+        <ellipse
+            style="fill:{c};stroke-width:0.8"
+            cx="{x}"
+            cy="{y}"
+            rx="{0.05* point_distance}"
+            ry="{0.05* point_distance}" />
+        <text
+            transform="scale(1)"
+            style="text-anchor: middle;alignment-baseline: central;font-size:{0.25 * point_distance};font-family:'Linux Libertine O';white-space:pre;fill:#000000;stroke-width:4">
+            <tspan x="{x}" y="{y+0.23* point_distance}">{str(label)}</tspan>
+        </text>
+    </g>
+"""
+    )
+
+
 # iterate over list of points to draw lattice
 def draw_lattice(
     coords,
     lattice_parameters: LatticeParameters,
     width_x=1,
     width_y=1,
+    output_svg=False,
 ):
     global highlight_display_index
+
+    if output_svg:
+        svg = open(f"./{time.time()}.svg", "w")
+
+        bounds_test = np.array(coords)[:, 1:]
+        bounds_min = bounds_test.min(axis=0)
+        bounds_max = bounds_test.max(axis=0)
+
+        svg.write(
+            f"""<?xml version="1.0" encoding="UTF-8"?>
+
+<svg
+   width="{int(svg_size_in_mm * width_x / width_y)}mm"
+   height="{svg_size_in_mm}mm"
+   viewBox="{f"{bounds_min[0]-point_distance/2} {bounds_min[1]-point_distance/2} {bounds_max[0]-bounds_min[0]+point_distance} {bounds_max[1]-bounds_min[1]+point_distance}"}"
+   version="1.1"
+   id="svg5"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+"""
+        )
 
     while True:
         init(coords, width_x, width_y)
@@ -57,22 +102,46 @@ def draw_lattice(
                 else []
             )
 
-            draw_point(
-                x,
-                y,
-                index,  # label
-                width_x=width_x,
-                width_y=width_y,
-                c="#aa0000"
-                if index == highlight_index
-                else (
-                    "#00aa00"
-                    if index in nn_indices
-                    else ("#aaaa00" if index in nnn_indices else "#0000aa")
-                ),
-            )
+            if output_svg:
+                draw_svg_point(
+                    svg,
+                    x,
+                    y,
+                    index,  # label
+                    width_x=width_x,
+                    width_y=width_y,
+                    c="#aa0000"
+                    if index == highlight_index
+                    else (
+                        "#00aa00"
+                        if index in nn_indices
+                        else ("#aaaa00" if index in nnn_indices else "#0000aa")
+                    ),
+                )
+            else:
+                draw_point(
+                    x,
+                    y,
+                    index,  # label
+                    width_x=width_x,
+                    width_y=width_y,
+                    c="#aa0000"
+                    if index == highlight_index
+                    else (
+                        "#00aa00"
+                        if index in nn_indices
+                        else ("#aaaa00" if index in nnn_indices else "#0000aa")
+                    ),
+                )
 
-        show()
+        if output_svg:
+            break
+        else:
+            show()
+
+    if output_svg:
+        svg.write("</svg>\n")
+        svg.close()
 
 
 # init plot surface
@@ -128,7 +197,9 @@ def coords_linear_lattice(n=1):
     return coords
 
 
-def draw_linear_lattice(size=1, periodic_bounds=False, random_swaps=0):
+def draw_linear_lattice(
+    size=1, periodic_bounds=False, random_swaps=0, output_svg=False
+):
     coords = coords_linear_lattice(n=size)
 
     lattice_parameters = resolve_lattice_parameters(
@@ -140,6 +211,7 @@ def draw_linear_lattice(size=1, periodic_bounds=False, random_swaps=0):
         lattice_parameters=lattice_parameters,
         width_x=size,
         width_y=size / 2,
+        output_svg=output_svg,
     )
 
 
@@ -161,7 +233,7 @@ def coords_cubic_lattice(n=1):
     return coords
 
 
-def draw_cubic_lattice(size=1, periodic_bounds=False, random_swaps=0):
+def draw_cubic_lattice(size=1, periodic_bounds=False, random_swaps=0, output_svg=False):
     coords = coords_cubic_lattice(n=size + 1)
 
     lattice_parameters = resolve_lattice_parameters(
@@ -173,6 +245,7 @@ def draw_cubic_lattice(size=1, periodic_bounds=False, random_swaps=0):
         lattice_parameters=lattice_parameters,
         width_x=size + 1,
         width_y=size + 1,
+        output_svg=output_svg,
     )
 
 
@@ -203,7 +276,9 @@ def coords_trigonal_square_lattice(n=2):
     return coords
 
 
-def draw_trigonal_square_lattice(size=1, periodic_bounds=False, random_swaps=0):
+def draw_trigonal_square_lattice(
+    size=1, periodic_bounds=False, random_swaps=0, output_svg=False
+):
     coords = coords_trigonal_square_lattice(n=2 * size)
 
     lattice_parameters = resolve_lattice_parameters(
@@ -218,6 +293,7 @@ def draw_trigonal_square_lattice(size=1, periodic_bounds=False, random_swaps=0):
         lattice_parameters=lattice_parameters,
         width_x=2 * size - 0.5,
         width_y=(2 * size - 1) * math.sin(60.0 / 180.0 * math.pi),
+        output_svg=output_svg,
     )
 
 
@@ -241,7 +317,9 @@ def coords_trigonal_diamond_lattice(n=1):
     return coords
 
 
-def draw_trigonal_diamond_lattice(size=1, periodic_bounds=False, random_swaps=0):
+def draw_trigonal_diamond_lattice(
+    size=1, periodic_bounds=False, random_swaps=0, output_svg=False
+):
     coords = coords_trigonal_diamond_lattice(n=size)
 
     lattice_parameters = resolve_lattice_parameters(
@@ -256,6 +334,7 @@ def draw_trigonal_diamond_lattice(size=1, periodic_bounds=False, random_swaps=0)
         lattice_parameters=lattice_parameters,
         width_x=size,
         width_y=2 * size * math.sin(60.0 / 180.0 * math.pi),
+        output_svg=output_svg,
     )
 
 
@@ -274,7 +353,9 @@ def coords_trigonal_hexagonal_lattice(n=2):
     return coords
 
 
-def draw_trigonal_hexagonal_lattice(size=1, periodic_bounds=False, random_swaps=0):
+def draw_trigonal_hexagonal_lattice(
+    size=1, periodic_bounds=False, random_swaps=0, output_svg=False
+):
     coords = coords_trigonal_hexagonal_lattice(n=size + 1)
 
     lattice_parameters = resolve_lattice_parameters(
@@ -289,6 +370,7 @@ def draw_trigonal_hexagonal_lattice(size=1, periodic_bounds=False, random_swaps=
         lattice_parameters=lattice_parameters,
         width_x=2 * size,
         width_y=(2 * size) * math.sin(60.0 / 180.0 * math.pi),
+        output_svg=output_svg,
     )
 
 
@@ -307,7 +389,9 @@ def coords_hexagonal_lattice(n=1):
     return coords
 
 
-def draw_hexagonal_lattice(size=1, periodic_bounds=False, random_swaps=0):
+def draw_hexagonal_lattice(
+    size=1, periodic_bounds=False, random_swaps=0, output_svg=False
+):
     coords = coords_hexagonal_lattice(n=size)
 
     lattice_parameters = resolve_lattice_parameters(
@@ -322,6 +406,7 @@ def draw_hexagonal_lattice(size=1, periodic_bounds=False, random_swaps=0):
         lattice_parameters=lattice_parameters,
         width_x=(2 * size) - 1 + 2 * size * math.cos(60.0 / 180.0 * math.pi),
         width_y=(2 * size) - 1 + 2 * size * math.cos(60.0 / 180.0 * math.pi),
+        output_svg=output_svg,
     )
 
 
@@ -338,9 +423,9 @@ def cube_coordinates_to_cartesian_coordinates(q, r):
 
 
 if __name__ == "__main__":
-    draw_linear_lattice(20, False, -1)
-    # draw_cubic_lattice(4, False, -1)
-    # draw_trigonal_square_lattice(4, False, -1)
-    # draw_trigonal_diamond_lattice(4, False, -1)
-    # draw_trigonal_hexagonal_lattice(4, False, -1)
-    # draw_hexagonal_lattice(3, True, -1)
+    # draw_linear_lattice(6, False, 0, False)
+    draw_cubic_lattice(4, False, 0, False)
+    # draw_trigonal_square_lattice(4, False, 0, False)
+    # draw_trigonal_diamond_lattice(4, False, 0, False)
+    # draw_trigonal_hexagonal_lattice(4, False, 0, False)
+    # draw_hexagonal_lattice(3, True, 0, False)
