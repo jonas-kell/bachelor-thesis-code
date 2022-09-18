@@ -209,7 +209,7 @@ class GraphMaskAttention(nn.Module):
 
 
 class GraphMaskPooling(nn.Module):
-    """Graph-Mask implementation that uses averaging neighbor interaction in order to facilitate pooling"""
+    """Graph-Mask implementation that uses averaging neighbor interaction in order to simulate pooling"""
 
     lattice_parameters: LatticeParameters
     graph_layer: Literal["symm_nn", "symm_nnn"] = "symm_nn"
@@ -240,7 +240,7 @@ class GraphMaskPooling(nn.Module):
 
 
 class GraphMaskConvolution(nn.Module):
-    """Graph-Mask implementation that uses averaging neighbor interaction in order to facilitate pooling"""
+    """Graph-Mask implementation that uses adding neighbor interaction in order to simulate convolutions"""
 
     lattice_parameters: LatticeParameters
     embed_dim: int
