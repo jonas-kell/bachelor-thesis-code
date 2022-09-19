@@ -72,7 +72,7 @@ available_models = {
         mlp_ratio=mlp_ratio,
         ansatz=ansatz,
     ),
-    "GF-NN": lambda lattice_parameters, depth, embed_dim, num_heads, mlp_ratio, ansatz: graph_transformer_nn(
+    "GTF-NN": lambda lattice_parameters, depth, embed_dim, num_heads, mlp_ratio, ansatz: graph_transformer_nn(
         lattice_parameters=lattice_parameters,
         depth=depth,
         embed_dim=embed_dim,
@@ -80,7 +80,7 @@ available_models = {
         mlp_ratio=mlp_ratio,
         ansatz=ansatz,
     ),
-    "GF-NNN": lambda lattice_parameters, depth, embed_dim, num_heads, mlp_ratio, ansatz: graph_transformer_nnn(
+    "GTF-NNN": lambda lattice_parameters, depth, embed_dim, num_heads, mlp_ratio, ansatz: graph_transformer_nnn(
         lattice_parameters=lattice_parameters,
         depth=depth,
         embed_dim=embed_dim,
@@ -89,7 +89,7 @@ available_models = {
         ansatz=ansatz,
     ),
     # TODO "dumb" pooling action as comparison
-    "GP-NN": lambda lattice_parameters, depth, embed_dim, num_heads, mlp_ratio, ansatz: graph_poolformer_nn(
+    "GPF-NN": lambda lattice_parameters, depth, embed_dim, num_heads, mlp_ratio, ansatz: graph_poolformer_nn(
         lattice_parameters=lattice_parameters,
         depth=depth,
         embed_dim=embed_dim,
@@ -97,7 +97,7 @@ available_models = {
         mlp_ratio=mlp_ratio,
         ansatz=ansatz,
     ),
-    "GP-NNN": lambda lattice_parameters, depth, embed_dim, num_heads, mlp_ratio, ansatz: graph_poolformer_nnn(
+    "GPF-NNN": lambda lattice_parameters, depth, embed_dim, num_heads, mlp_ratio, ansatz: graph_poolformer_nnn(
         lattice_parameters=lattice_parameters,
         depth=depth,
         embed_dim=embed_dim,
@@ -105,7 +105,7 @@ available_models = {
         mlp_ratio=mlp_ratio,
         ansatz=ansatz,
     ),
-    "GC-NN": lambda lattice_parameters, depth, embed_dim, num_heads, mlp_ratio, ansatz: graph_conformer_nn(
+    "SGDCF-NN": lambda lattice_parameters, depth, embed_dim, num_heads, mlp_ratio, ansatz: graph_conformer_nn(
         lattice_parameters=lattice_parameters,
         depth=depth,
         embed_dim=embed_dim,
@@ -113,7 +113,7 @@ available_models = {
         mlp_ratio=mlp_ratio,
         ansatz=ansatz,
     ),
-    "GC-NNN": lambda lattice_parameters, depth, embed_dim, num_heads, mlp_ratio, ansatz: graph_conformer_nnn(
+    "SGDCF-NNN": lambda lattice_parameters, depth, embed_dim, num_heads, mlp_ratio, ansatz: graph_conformer_nnn(
         lattice_parameters=lattice_parameters,
         depth=depth,
         embed_dim=embed_dim,
