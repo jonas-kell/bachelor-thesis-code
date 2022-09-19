@@ -12,7 +12,7 @@ import jax.random as random
 sys.path.append(os.path.abspath("./../"))
 sys.path.append(os.path.abspath("./../models"))
 sys.path.append(os.path.abspath("./../structures"))
-from models.metaformer import Attention, AveragingConvolutionHead
+from models.metaformer import Attention, AveragingPoolingHead
 from structures.lattice_parameter_resolver import resolve_lattice_parameters
 
 
@@ -45,7 +45,7 @@ x = jnp.array(range(nr_patches * embed_dim)).reshape((nr_patches, embed_dim))
 print("x: ", x)
 print("x shape: ", x.shape)
 
-model = AveragingConvolutionHead()
+model = AveragingPoolingHead()
 params = model.init(random.PRNGKey(0), x)
 
 print(model.apply(params, x))

@@ -31,7 +31,7 @@ class Identity(nn.Module):
         return x
 
 
-class AveragingConvolutionHead(nn.Module):
+class AveragingPoolingHead(nn.Module):
     @nn.compact
     def __call__(self, x):
         N, D = x.shape
@@ -518,7 +518,7 @@ class Metaformer(nn.Module):
         )
 
         # Pooling-dimension-reducing-head
-        self.head = AveragingConvolutionHead()
+        self.head = AveragingPoolingHead()
 
         # Assemble complex number from result
         if self.ansatz == "split-complex":
