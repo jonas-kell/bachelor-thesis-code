@@ -151,12 +151,12 @@ def execute_ground_state_search(
             if model_name
             in [
                 "TF",
-                "GF-NN",
-                "GF-NNN",
-                "GP-NN",
-                "GP-NNN",
-                "GC-NN",
-                "GC-NNN",
+                "GTF-NN",
+                "GTF-NNN",
+                "GPF-NN",
+                "GPF-NNN",
+                "SGDCF-NN",
+                "SGDCF-NNN",
             ]
             else ""
         )
