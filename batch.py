@@ -9,6 +9,7 @@ for ansatz in ["single-real", "split-complex", "two-real"]:
             message = f"ansatz: {ansatz}, depth: {depth}, embed_dim: {embed_dim}, heads: {heads}"
 
             if (ansatz, depth, embed_dim, heads) in [
+                ("single-real", 1, 16, 1),
                 ("single-real", 5, 4, 1),
                 ("single-real", 3, 4, 1),
                 ("single-real", 3, 8, 1),
@@ -35,7 +36,7 @@ for ansatz in ["single-real", "split-complex", "two-real"]:
                     hamiltonian_h_parameter=-0.7,
                     model_name="GPF-NNN",
                     early_abort_var=0.001,
-                    n_steps=800,
+                    n_steps=480,
                     n_samples=1000,
                 )
             except Exception as exc:
