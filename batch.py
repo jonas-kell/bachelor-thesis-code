@@ -10,6 +10,10 @@ for ansatz in ["single-real", "split-complex", "two-real"]:
 
             if (ansatz, depth, embed_dim, heads) in [
                 ("single-real", 1, 16, 1),
+                ("single-real", 1, 16, 2),
+                ("single-real", 1, 8, 1),
+                ("single-real", 1, 8, 2),
+                ("single-real", 2, 8, 1),
                 ("single-real", 5, 4, 1),
                 ("single-real", 3, 4, 1),
                 ("single-real", 3, 8, 1),
