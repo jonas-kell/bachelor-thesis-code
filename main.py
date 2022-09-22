@@ -53,7 +53,7 @@ from models.metaformer import (
 )
 
 # local folder constants
-tensorboard_folder_path = "/media/jonas/69B577D0C4C25263/MLData/tensorboard_trash/"
+tensorboard_folder_path = "/media/jonas/69B577D0C4C25263/MLData/tensorboard/"
 
 
 # add custom configurations in this dict
@@ -187,21 +187,21 @@ def execute_computation(
 if __name__ == "__main__":
     parameters = {
         "n_steps": 1000,
-        "n_samples": 40000,
-        "lattice_shape": "linear",
-        "lattice_size": 25,
+        "n_samples": 1000,
+        "lattice_shape": "trigonal_square",
+        "lattice_size": 4,
         "lattice_periodic": True,
         "lattice_random_swaps": 0,
-        "model_name": "CNN",
+        "model_name": "SGDCF-NNN",
         "hamiltonian_J_parameter": -1.0,
         "hamiltonian_h_parameter": -0.7,
         "num_chains": 100,
         "thermalization_sweeps": 25,
         "nqs_batch_size": 1000,
-        "depth": 5,
-        "embed_dim": 6,
-        "num_heads": 3,
-        "mlp_ratio": 2,
+        "depth": 3,
+        "embed_dim": 8,
+        "num_heads": 2,
+        "mlp_ratio": 4,
         "ansatz": "single-real",
         "early_abort_var": -1.0,
     }
