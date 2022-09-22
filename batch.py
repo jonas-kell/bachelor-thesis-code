@@ -19,6 +19,7 @@ for ansatz in ["single-real", "split-complex", "two-real"]:
             ]:
                 post_message_to_slack("skipped: " + message)
                 print("skipped: " + message)
+                continue  # skips one calculation (if already done or known to cause crashes)
 
             print("doing: " + message)
             try:
