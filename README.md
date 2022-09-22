@@ -6,8 +6,10 @@ The work for my Bachelors-Thesis is split into multiple repositories (links for 
 -   [Experimental Code, Tests and Library-Setup](https://github.com/jonas-kell/bachelor-thesis-experiments)
 -   [Final Code/Scripts/Results](https://github.com/jonas-kell/bachelor-thesis-code)
 
-# Explanation
+# Installation
 
-This repository is a collection of the finalized code referenced in the thesis.
+Reference [Installation](./INSTALLATION.md) for package installation instructions.
 
-The quick start will be added in the future.
+# Quick start
+
+Reference [QUICK START](./QUICK_START.md) for usage instructions.
