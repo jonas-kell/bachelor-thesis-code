@@ -60,6 +60,7 @@ def execute_ground_state_search(
     ansatz: Literal[
         "single-real", "single-complex", "split-complex", "two-real"
     ] = "single-real",
+    head: Literal["act-fun", "cnn"] = "act-fun",
     early_abort_var: float = -1.0,
 ):
     # Get lattice parameters
@@ -147,7 +148,7 @@ def execute_ground_state_search(
         + model_name
         + f"({ansatz_short_names[ansatz]})"
         + (
-            f"(dp: {depth}, ed: {embed_dim}, nh: {num_heads}, mr: {mlp_ratio})"
+            f"(dp: {depth}, ed: {embed_dim}, nh: {num_heads}, mr: {mlp_ratio}, hf: {'af' if head == 'act-fun' else head})"
             if model_name
             in [
                 "TF",
@@ -177,6 +178,7 @@ def execute_ground_state_search(
         "num_heads": num_heads,
         "mlp_ratio": mlp_ratio,
         "ansatz": ansatz,
+        "head_fn": head,
         "lattice_shape_name": lattice_parameters["shape_name"],
         "lattice_nr_sites": lattice_parameters["nr_sites"],
         "lattice_periodic": lattice_parameters["periodic"],

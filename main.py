@@ -151,6 +151,7 @@ def execute_computation(
     ansatz: Literal[
         "single-real", "single-complex", "split-complex", "two-real"
     ] = "single-real",
+    head: Literal["act-fun", "cnn"] = "act-fun",
     early_abort_var: float = -1.0,
 ):
     lattice_parameters = resolve_lattice_parameters(
@@ -180,6 +181,7 @@ def execute_computation(
         num_heads=num_heads,
         mlp_ratio=mlp_ratio,
         ansatz=ansatz,
+        head=head,
         early_abort_var=early_abort_var,
     )
 
@@ -203,6 +205,7 @@ if __name__ == "__main__":
         "num_heads": 2,
         "mlp_ratio": 4,
         "ansatz": "single-real",
+        "head": "act-fun",
         "early_abort_var": -1.0,
     }
 
