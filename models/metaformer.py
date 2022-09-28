@@ -573,6 +573,8 @@ class Metaformer(nn.Module):
 
         elif self.head == "cnn":
             return self.cnnHead(x)
+        else:
+            raise RuntimeError("Impossible head function")
 
     # as the outermost module contains lists/dicts as parameters (e.g. lattice_parameters), it is not hashable.
     # this could cause problems if more than one instance of an unhashable modlue is used. But here it should be fine for now
