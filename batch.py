@@ -2,52 +2,220 @@ import traceback
 from main import execute_computation
 from slack.message import post_message_to_slack
 
-for ansatz in ["single-real", "split-complex", "two-real"]:
-    for depth, embed_dim in [(1, 16), (1, 8), (2, 8), (3, 4), (3, 8), (4, 4), (5, 4)]:
-        for heads in [1, 2]:
+try:
+    execute_computation(
+        lattice_random_swaps=-1,
+        lattice_periodic=True,
+        lattice_size=3,
+        lattice_shape="trigonal_hexagonal",
+        ansatz="single-real",
+        depth=1,
+        embed_dim=16,
+        mlp_ratio=2,
+        num_heads=1,
+        hamiltonian_J_parameter=-1,
+        hamiltonian_h_parameter=-0.7,
+        model_name="CNN",
+        head="act-fun",
+        early_abort_var=-1,
+        n_steps=800,
+        n_samples=1000,
+    )
+except Exception as exc:
+    print(traceback.format_exc())
 
-            message = f"ansatz: {ansatz}, depth: {depth}, embed_dim: {embed_dim}, heads: {heads}"
+post_message_to_slack("1/9")
 
-            if (ansatz, depth, embed_dim, heads) in [
-                ("single-real", 1, 16, 1),
-                ("single-real", 1, 16, 2),
-                ("single-real", 1, 8, 1),
-                ("single-real", 1, 8, 2),
-                ("single-real", 2, 8, 1),
-                ("single-real", 5, 4, 1),
-                ("single-real", 3, 4, 1),
-                ("single-real", 3, 8, 1),
-                ("split-complex", 5, 4, 1),
-                ("split-complex", 3, 4, 1),
-                ("split-complex", 3, 8, 1),
-            ]:
-                post_message_to_slack("skipped: " + message)
-                print("skipped: " + message)
-                continue  # skips one calculation (if already done or known to cause crashes)
+try:
+    execute_computation(
+        lattice_random_swaps=-1,
+        lattice_periodic=True,
+        lattice_size=3,
+        lattice_shape="trigonal_hexagonal",
+        ansatz="single-real",
+        depth=1,
+        embed_dim=16,
+        mlp_ratio=2,
+        num_heads=1,
+        hamiltonian_J_parameter=-1,
+        hamiltonian_h_parameter=-0.7,
+        model_name="RBM",
+        head="act-fun",
+        early_abort_var=-1,
+        n_steps=800,
+        n_samples=1000,
+    )
+except Exception as exc:
+    print(traceback.format_exc())
 
-            print("doing: " + message)
-            try:
-                execute_computation(
-                    lattice_random_swaps=-1,
-                    lattice_periodic=True,
-                    lattice_size=4,
-                    lattice_shape="trigonal_square",
-                    ansatz=ansatz,
-                    depth=depth,
-                    embed_dim=embed_dim,
-                    mlp_ratio=4,
-                    num_heads=heads,
-                    hamiltonian_J_parameter=-1,
-                    hamiltonian_h_parameter=-0.7,
-                    model_name="GPF-NNN",
-                    early_abort_var=0.001,
-                    n_steps=480,
-                    n_samples=1000,
-                )
-            except Exception as exc:
-                print(traceback.format_exc())
+post_message_to_slack("2/9")
 
-            post_message_to_slack("did: " + message)
-            print("did: " + message)
+try:
+    execute_computation(
+        lattice_random_swaps=-1,
+        lattice_periodic=True,
+        lattice_size=3,
+        lattice_shape="trigonal_hexagonal",
+        ansatz="single-real",
+        depth=2,
+        embed_dim=7,
+        mlp_ratio=2,
+        num_heads=1,
+        hamiltonian_J_parameter=-1,
+        hamiltonian_h_parameter=-0.7,
+        model_name="GPF-NN",
+        head="act-fun",
+        early_abort_var=-1,
+        n_steps=800,
+        n_samples=1000,
+    )
+except Exception as exc:
+    print(traceback.format_exc())
+
+post_message_to_slack("3/9")
+
+try:
+    execute_computation(
+        lattice_random_swaps=-1,
+        lattice_periodic=True,
+        lattice_size=3,
+        lattice_shape="trigonal_hexagonal",
+        ansatz="single-real",
+        depth=2,
+        embed_dim=7,
+        mlp_ratio=2,
+        num_heads=1,
+        hamiltonian_J_parameter=-1,
+        hamiltonian_h_parameter=-0.7,
+        model_name="GPF-NNN",
+        head="act-fun",
+        early_abort_var=-1,
+        n_steps=800,
+        n_samples=1000,
+    )
+except Exception as exc:
+    print(traceback.format_exc())
+
+post_message_to_slack("4/9")
+
+try:
+    execute_computation(
+        lattice_random_swaps=-1,
+        lattice_periodic=True,
+        lattice_size=3,
+        lattice_shape="trigonal_hexagonal",
+        ansatz="single-real",
+        depth=2,
+        embed_dim=7,
+        mlp_ratio=2,
+        num_heads=1,
+        hamiltonian_J_parameter=-1,
+        hamiltonian_h_parameter=-0.7,
+        model_name="SGDCF-NN",
+        head="act-fun",
+        early_abort_var=-1,
+        n_steps=800,
+        n_samples=1000,
+    )
+except Exception as exc:
+    print(traceback.format_exc())
+
+post_message_to_slack("5/9")
+
+try:
+    execute_computation(
+        lattice_random_swaps=-1,
+        lattice_periodic=True,
+        lattice_size=3,
+        lattice_shape="trigonal_hexagonal",
+        ansatz="single-real",
+        depth=2,
+        embed_dim=7,
+        mlp_ratio=2,
+        num_heads=1,
+        hamiltonian_J_parameter=-1,
+        hamiltonian_h_parameter=-0.7,
+        model_name="SGDCF-NNN",
+        head="act-fun",
+        early_abort_var=-1,
+        n_steps=800,
+        n_samples=1000,
+    )
+except Exception as exc:
+    print(traceback.format_exc())
+
+post_message_to_slack("6/9")
+
+try:
+    execute_computation(
+        lattice_random_swaps=-1,
+        lattice_periodic=True,
+        lattice_size=3,
+        lattice_shape="trigonal_hexagonal",
+        ansatz="single-real",
+        depth=2,
+        embed_dim=5,
+        mlp_ratio=2,
+        num_heads=1,
+        hamiltonian_J_parameter=-1,
+        hamiltonian_h_parameter=-0.7,
+        model_name="TF",
+        head="act-fun",
+        early_abort_var=-1,
+        n_steps=800,
+        n_samples=1000,
+    )
+except Exception as exc:
+    print(traceback.format_exc())
+
+post_message_to_slack("7/9")
+
+try:
+    execute_computation(
+        lattice_random_swaps=-1,
+        lattice_periodic=True,
+        lattice_size=3,
+        lattice_shape="trigonal_hexagonal",
+        ansatz="single-real",
+        depth=2,
+        embed_dim=5,
+        mlp_ratio=2,
+        num_heads=1,
+        hamiltonian_J_parameter=-1,
+        hamiltonian_h_parameter=-0.7,
+        model_name="GTF-NN",
+        head="act-fun",
+        early_abort_var=-1,
+        n_steps=800,
+        n_samples=1000,
+    )
+except Exception as exc:
+    print(traceback.format_exc())
+
+post_message_to_slack("8/9")
+
+try:
+    execute_computation(
+        lattice_random_swaps=-1,
+        lattice_periodic=True,
+        lattice_size=3,
+        lattice_shape="trigonal_hexagonal",
+        ansatz="single-real",
+        depth=2,
+        embed_dim=5,
+        mlp_ratio=2,
+        num_heads=1,
+        hamiltonian_J_parameter=-1,
+        hamiltonian_h_parameter=-0.7,
+        model_name="GTF-NNN",
+        head="act-fun",
+        early_abort_var=-1,
+        n_steps=800,
+        n_samples=1000,
+    )
+except Exception as exc:
+    print(traceback.format_exc())
+
+post_message_to_slack("9/9")
 
 post_message_to_slack("Have finished")
