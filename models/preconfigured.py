@@ -74,7 +74,7 @@ def rbm(
     ] = "single-real",
 ) -> nn.Module:
 
-    hidden = 8
+    hidden = 16
     bias = False
 
     if ansatz == "single-real":
