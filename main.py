@@ -129,7 +129,7 @@ def execute_computation(
     n_samples: int,
     lattice_shape: Literal[
         "linear",
-        "cubic",
+        "square",
         "trigonal_square",
         "trigonal_diamond",
         "trigonal_hexagonal",

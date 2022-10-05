@@ -221,7 +221,7 @@ def draw_linear_lattice(
     )
 
 
-def coords_cubic_lattice(n=1):
+def coords_square_lattice(n=1):
     assert n > 0
     coords = []
     index = 0
@@ -239,11 +239,13 @@ def coords_cubic_lattice(n=1):
     return coords
 
 
-def draw_cubic_lattice(size=1, periodic_bounds=False, random_swaps=0, output_svg=False):
-    coords = coords_cubic_lattice(n=size + 1)
+def draw_square_lattice(
+    size=1, periodic_bounds=False, random_swaps=0, output_svg=False
+):
+    coords = coords_square_lattice(n=size + 1)
 
     lattice_parameters = resolve_lattice_parameters(
-        size=size, shape="cubic", periodic=periodic_bounds, random_swaps=random_swaps
+        size=size, shape="square", periodic=periodic_bounds, random_swaps=random_swaps
     )
 
     draw_lattice(
@@ -430,7 +432,7 @@ def cube_coordinates_to_cartesian_coordinates(q, r):
 
 if __name__ == "__main__":
     # draw_linear_lattice(6, False, 0, False)
-    draw_cubic_lattice(4, False, 0, False)
+    draw_square_lattice(4, False, 0, False)
     # draw_trigonal_square_lattice(4, False, 0, False)
     # draw_trigonal_diamond_lattice(4, False, 0, False)
     # draw_trigonal_hexagonal_lattice(4, False, 0, False)

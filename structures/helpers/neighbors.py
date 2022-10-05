@@ -38,11 +38,11 @@ def linear_nr_lattice_sites(n):
     return n
 
 
-def cubic_lattice_get_nn_indices(index, n, periodic_bounds=False):
+def square_lattice_get_nn_indices(index, n, periodic_bounds=False):
     assert n > 0
     neighbors = []
 
-    if not 0 <= index < cubic_nr_lattice_sites(n):
+    if not 0 <= index < square_nr_lattice_sites(n):
         return neighbors
 
     x = index % n
@@ -60,11 +60,11 @@ def cubic_lattice_get_nn_indices(index, n, periodic_bounds=False):
     return neighbors
 
 
-def cubic_lattice_get_nnn_indices(index, n, periodic_bounds=False):
+def square_lattice_get_nnn_indices(index, n, periodic_bounds=False):
     assert n > 0
     neighbors = []
 
-    if not 0 <= index < cubic_nr_lattice_sites(n):
+    if not 0 <= index < square_nr_lattice_sites(n):
         return neighbors
 
     x = index % n
@@ -82,7 +82,7 @@ def cubic_lattice_get_nnn_indices(index, n, periodic_bounds=False):
     return neighbors
 
 
-def cubic_nr_lattice_sites(n):
+def square_nr_lattice_sites(n):
     assert n > 0
 
     return n * n
@@ -540,8 +540,8 @@ def qr_part_of_hexagonal_lattice(q, r):
 
 
 if __name__ == "__main__":
-    # print(cubic_lattice_get_nn_indices(4, 3))
-    # print(cubic_lattice_get_nn_indices(0, 3))
+    # print(square_lattice_get_nn_indices(4, 3))
+    # print(square_lattice_get_nn_indices(0, 3))
 
     # print(trigonal_diamond_index_to_row_col(0, 2))
     # print(trigonal_diamond_index_to_row_col(1, 2))

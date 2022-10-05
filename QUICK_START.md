@@ -13,7 +13,7 @@ Set the desired lattices on the bottom of `/structures/visualize.ps`:
 ```python
 if __name__ == "__main__":
     # draw_linear_lattice(6, False, 0, False)
-    draw_cubic_lattice(4, False, 0, False)
+    draw_square_lattice(4, False, 0, False)
     # draw_trigonal_square_lattice(4, False, 0, False)
     # draw_trigonal_diamond_lattice(4, False, 0, False)
     # draw_trigonal_hexagonal_lattice(4, False, 0, False)

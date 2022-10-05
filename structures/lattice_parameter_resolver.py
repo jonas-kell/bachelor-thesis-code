@@ -7,9 +7,9 @@ from helpers.neighbors import (
     linear_lattice_get_nn_indices,
     linear_lattice_get_nnn_indices,
     linear_nr_lattice_sites,
-    cubic_lattice_get_nn_indices,
-    cubic_lattice_get_nnn_indices,
-    cubic_nr_lattice_sites,
+    square_lattice_get_nn_indices,
+    square_lattice_get_nnn_indices,
+    square_nr_lattice_sites,
     trigonal_square_lattice_get_nn_indices,
     trigonal_square_lattice_get_nnn_indices,
     trigonal_square_nr_lattice_sites,
@@ -63,7 +63,7 @@ def resolve_lattice_parameters(
     size: int,  # 1 -> ...
     shape: Literal[
         "linear",
-        "cubic",
+        "square",
         "trigonal_square",
         "trigonal_diamond",
         "trigonal_hexagonal",
@@ -81,11 +81,11 @@ def resolve_lattice_parameters(
         nn_function = linear_lattice_get_nn_indices
         nnn_function = linear_lattice_get_nnn_indices
 
-    elif shape == "cubic":
+    elif shape == "square":
         n = size + 1
-        nr_function = cubic_nr_lattice_sites
-        nn_function = cubic_lattice_get_nn_indices
-        nnn_function = cubic_lattice_get_nnn_indices
+        nr_function = square_nr_lattice_sites
+        nn_function = square_lattice_get_nn_indices
+        nnn_function = square_lattice_get_nnn_indices
 
     elif shape == "trigonal_square":
         n = 2 * size
