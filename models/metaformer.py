@@ -234,7 +234,6 @@ class GraphMaskPooling(nn.Module):
         self.pooling_interaction_matrix = stop_gradient(self.pooling_interaction_matrix)
 
     def __call__(self, x):
-
         x = jnp.matmul(self.pooling_interaction_matrix, x)
 
         return x
@@ -263,7 +262,6 @@ class GraphMaskConvolution(nn.Module):
                 self.lattice_parameters["adjacency_matrices"]["add_self_matrix"], x
             ),
         )
-
         if self.graph_layer in ["symm_nn", "symm_nnn"]:
             res += jnp.einsum(
                 "d,nd->nd",
@@ -272,7 +270,6 @@ class GraphMaskConvolution(nn.Module):
                     self.lattice_parameters["adjacency_matrices"]["add_nn_matrix"], x
                 ),
             )
-
         if self.graph_layer == "symm_nnn":
             res += jnp.einsum(
                 "d,nd->nd",
